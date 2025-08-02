@@ -1,29 +1,91 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ModalProvider } from "@/app/components/ModalProvider";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { Stack, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect, useState } from 'react';
+import 'react-native-gesture-handler';
+import { Provider, useSelector } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import store, { persistor, RootState } from '../redux/store';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+SplashScreen.preventAutoHideAsync();
+
+const RootLayout = () => {
+  const [isFirstTime, setIsFirstTime] = useState<boolean | null>(null);
+  const [loaded, error] = useFonts({
+    MulishRegular: require('../assets/fonts/Mulish-Regular.ttf'),
+    MulishBold: require('../assets/fonts/Mulish-Bold.ttf'),
+    MulishSemiBold: require('../assets/fonts/Mulish-SemiBold.ttf'),
+    ...FontAwesome.font,
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  useEffect(() => {
+    const checkFirstTime = async () => {
+      const appData = await AsyncStorage.getItem('isFirstTime');
+      if (appData === null) {
+        setIsFirstTime(true);
+        await AsyncStorage.setItem('isFirstTime', 'false');
+      } else {
+        setIsFirstTime(false);
+      }
+    };
+    checkFirstTime();
+  }, []);
+
+  if (!loaded || isFirstTime === null) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <ModalProvider>
+          <MainLayout isFirstTime={isFirstTime} />
+        </ModalProvider>
+      </PersistGate>
+    </Provider>
   );
-}
+};
+
+const MainLayout = ({ isFirstTime }: { isFirstTime: boolean }) => {
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const router = useRouter();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!userInfo && isFirstTime) {
+        router.replace('/tabs');
+        // router.replace("/onboarding");
+      } else if (!userInfo && !isFirstTime) {
+        router.replace('/auth/login');
+      } else {
+        router.replace('/tabs');
+      }
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [userInfo, isFirstTime, router]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="tabs" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="auth" />
+      <Stack.Screen name="otp" />
+      <Stack.Screen name="verify/[otpVerification]" />
+    </Stack>
+  );
+};
+
+export default RootLayout;

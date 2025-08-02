@@ -1,0 +1,1 @@
+export const IS_UI_DEMO_MODE = process.env.EXPO_PUBLIC_UI_DEMO_MODE ?? true;
