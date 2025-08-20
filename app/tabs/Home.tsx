@@ -2,7 +2,6 @@ import AppHeader from "@/app/components/AppHeader";
 import AppIcon from "@/app/components/AppIcon";
 import AppScreen from "@/app/components/AppScreen";
 import AppText from "@/app/components/AppText";
-import { useOpenModal } from "@/app/components/ModalContext";
 import PostView from "@/app/components/PostView";
 import Section from "@/app/components/Section";
 import useFlatListAPI from "@/common/utils/use_flatlist_api";
@@ -28,7 +27,7 @@ export default function HomeScreen() {
   const status = useFlatListAPI(fetchStatus, useStatus);
   const posts = useFlatListAPI(fetchPosts, usePosts);
   const padding = 16;
-  const openModal = useOpenModal();
+  // const openModal = useOpenModal();
   return (
     <AppScreen noSafeArea noPadding>
       <Section
@@ -90,7 +89,6 @@ export default function HomeScreen() {
           flex: 1,
           backgroundColor: WHITE,
           paddingHorizontal: padding,
-          marginTop: 5
         }}
         contentContainerStyle={{
           gap: 8,

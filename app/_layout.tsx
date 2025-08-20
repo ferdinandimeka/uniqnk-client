@@ -1,15 +1,15 @@
 import { ModalProvider } from "@/app/components/ModalProvider";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
-import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import store, { persistor, RootState } from '../redux/store';
-
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,7 +51,11 @@ const RootLayout = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ModalProvider>
-          <MainLayout isFirstTime={isFirstTime} />
+          <BottomSheetModalProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <MainLayout isFirstTime={isFirstTime} />
+            </GestureHandlerRootView>
+          </BottomSheetModalProvider>
         </ModalProvider>
       </PersistGate>
     </Provider>
@@ -80,6 +84,8 @@ const MainLayout = ({ isFirstTime }: { isFirstTime: boolean }) => {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="tabs" />
+      <Stack.Screen name="live" />
+      <Stack.Screen name="post" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="auth" />
       <Stack.Screen name="otp" />

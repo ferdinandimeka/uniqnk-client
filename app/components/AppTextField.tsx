@@ -87,7 +87,7 @@ export default function AppTextField(props: AppTextFieldProps) {
         props.onBlur?.(e);
       }}
       style={[
-        AppStyles.input,
+        AppStyles.input2,
         props.outlined ? AppStyles.outlinedInput : null,
         props.style,
         focused

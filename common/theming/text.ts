@@ -15,7 +15,7 @@ const TextStyles = StyleSheet.create({
   xs: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    lineHeight: 12
+    lineHeight: 15
   },
   sm: {
     fontSize: 14,

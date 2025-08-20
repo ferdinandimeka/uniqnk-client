@@ -81,6 +81,18 @@ const AppStyles = StyleSheet.create({
     marginBottom: 16,
     width: "100%",
   },
+  input2: {
+    ...TextStyles.normal,
+    backgroundColor: "#fffefe",
+    borderBottomWidth: 1,
+    color: "#333333",
+    borderColor: LIGHT_GREY,
+    textDecorationColor: PRIMARY,
+    paddingLeft: 40,
+    minHeight: 40,
+    marginBottom: 16,
+    width: "100%",
+  },
   focusedInput: {
     borderColor: PRIMARY,
     borderBottomWidth: 2,

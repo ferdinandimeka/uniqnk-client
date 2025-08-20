@@ -60,4 +60,5 @@ export const [fetchExploreArticles, useExploreArticles] =
   createDummyGenericAPIAction({
     image: "image",
     id: "insert_id(tags)",
+    tagId: () => dummyData({ value: "insert_id(tags)" }).value
   });
