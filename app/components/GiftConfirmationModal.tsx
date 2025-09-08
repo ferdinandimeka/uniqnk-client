@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     justifyContent: "flex-start", // 👈 aligns modal to top
     alignItems: "center",
-    paddingTop: 60, // distance from top
+    paddingTop: 80, // distance from top
   },
   modalContainer: {
     flexDirection: "row",

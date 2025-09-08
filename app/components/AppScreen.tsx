@@ -40,7 +40,7 @@ export default function AppScreen({
         }),
     backgroundColor,
     ...(noPadding ? {} : { paddingHorizontal }),
-    alignItems: "flex-start",
+    // alignItems: "flex-start",
     ...style,
   };
   const scrollRef = useRef<ScrollView>(null);

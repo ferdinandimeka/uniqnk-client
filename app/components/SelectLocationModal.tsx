@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import Form, { FormInput } from "./AppForm";
 // import AvatarImage from "./AvatarImage";
+import AppScreen from "./AppScreen"; // Ensure this is the correct import path for your AppScreen component
 import DecoratedTextField from "./DecoratedTextField";
 import IconButton2 from "./IconButton2";
 import { ModalArgs } from "./ModalContext";
@@ -46,7 +47,8 @@ const SelectLocationModal: React.FC<ModalArgs> = ({ dismiss, visible }) => {
         { transform: [{ translateX: slideAnim }] },
       ]}
     >
-       <Section
+        <AppScreen noPadding backgroundColor="#fff" style={{ flex: 1 }}>
+        <Section
             as={SafeAreaView}
             style={{
                 width: "100%",
@@ -128,6 +130,7 @@ const SelectLocationModal: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                 </View>
             </View>
         </View>
+        </AppScreen>
     </Animated.View>
   );
 };

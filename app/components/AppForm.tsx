@@ -12,10 +12,12 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Text, TextStyle, View } from "react-native";
+import { Text, TextStyle, TouchableOpacity, View } from "react-native";
 import AppButton from "./AppButton";
 import AppText from "./AppText";
 import AppTextField from "./AppTextField";
+
+import { ArrowDown2 } from "iconsax-react-native";
 
 type Path = [...path: (string | number)[], key: string];
 
@@ -181,25 +183,48 @@ export function FormInput<
 >({
   as: As = AppTextField as unknown as FormComponentType,
   name,
+  onOpenDropdown,
   ...props
 }: PolymorphicComponentProps<
   FormComponentType,
-  FormInputProps,
+  FormInputProps & { onOpenDropdown?: () => void },
   FormComponentProps<ValueType>
 >) {
   const field = useField<ValueType>(name);
 
+  const InputComponent = (
+    <As
+      update={field.update}
+      value={field.value}
+      name={name}
+      error={!!field.error}
+      noMargin={!!field.error}
+      editable={!onOpenDropdown} // disable keyboard if dropdown
+      pointerEvents={onOpenDropdown ? "none" : "auto"} // prevent focus
+      {...props}
+    />
+  );
+
   return (
     <>
       <FormLabel {...props} />
-      <As
-        update={field.update}
-        value={field.value}
-        name={name}
-        error={!!field.error}
-        noMargin={!!field.error}
-        {...props}
-      />
+
+      {onOpenDropdown ? (
+        // Wrap input + arrow in a touchable
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={onOpenDropdown}
+          style={{ flexDirection: "row", alignItems: "center" }}
+        >
+          <View style={{ flex: 1, position: "relative" }}>
+            {InputComponent}
+            <ArrowDown2 size={20} color="#999" style={{ alignSelf: "flex-end", bottom: 35, right: 15 }} />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        InputComponent
+      )}
+
       {field.error && (
         <AppText variant="body1" style={{ color: RED, ...AppStyles.mb }}>
           {field.error}
@@ -208,6 +233,7 @@ export function FormInput<
     </>
   );
 }
+
 
 export function FormLabel({
   label,

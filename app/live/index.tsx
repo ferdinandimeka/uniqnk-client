@@ -2,14 +2,15 @@ import { Stack, router } from "expo-router"
 import { Calendar1, Camera, CloseSquare, Fatrows, People, Setting2 } from "iconsax-react-native"
 import React from 'react'
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import AppScreen from "../components/AppScreen"
 
 export default function Live() {
   return (
-    <>
+    <AppScreen backgroundColor="#000" noPadding>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <ImageBackground 
-          source={require('../../assets/images/test_image_1.png')}
+          source={require('../../assets/images/camimage.jpg')}
           style={styles.header}
           resizeMode="cover"
         >
@@ -50,7 +51,7 @@ export default function Live() {
           <TouchableOpacity onPress={() => router.push("/live/session")} style={styles.footerItem}>
             <Image 
               source={require('../../assets/icons/Group.png')}
-              style={{ width: 96, height: 96 }}
+              style={{ width: 80, height: 80 }}
             />
           </TouchableOpacity>
 
@@ -59,7 +60,7 @@ export default function Live() {
           </TouchableOpacity>
         </View>
       </View>
-    </>
+    </AppScreen>
   )
 }
 
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
-    paddingVertical: 30,
+    paddingBottom: 30,
     paddingHorizontal: 20,
   },
   headerContentTop: {
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   },
   camera: {
     position: 'absolute',
-    top: 90,
+    top: 70,
     right: 20,
     padding: 10,
     borderRadius: 100,

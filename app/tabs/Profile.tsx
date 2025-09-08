@@ -2,12 +2,10 @@ import AppScreen from "@/app/components/AppScreen";
 import { FlatList } from "react-native-gesture-handler";
 
 import AppButton from "@/app/components/AppButton";
-import AppHeader from "@/app/components/AppHeader";
 import AvatarImage from "@/app/components/AvatarImage";
 import {
   BG,
-  LIGHT_GREY,
-  TEXT_DARKER
+  LIGHT_GREY
 } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
 import useFlatListAPI from "@/common/utils/use_flatlist_api";
@@ -20,21 +18,33 @@ import {
 // import { TabsParamList } from "@/navigation/TabsRouter";
 import AppText from "@/app/components/AppText";
 import React from "react";
-import { Dimensions, Image, View } from "react-native";
+import { Dimensions, Image, TouchableOpacity, View } from "react-native";
 // import { AppScreenProps } from "../../../navigation/RootRouter";
 import Section from "@/app/components/Section";
-import { useAppPadding } from "@/redux/ui/uiActions";
+// import { useAppPadding } from "@/redux/ui/uiActions";
+import { Stack, useRouter } from "expo-router";
+import { HambergerMenu, Notification } from "iconsax-react-native";
+
 
 const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
   function ProfileScreenHeader({ user }, ref) {
     user = useUserProfile();
+    // const openModal = useOpenModal();
+    const router = useRouter();
+    
+    const EditHandler = () => {
+      // openModal(ProfileModal, {}) // 🎁 open edit profile
+      router.push("/profile/editProfile")
+    }
     return (
+      // header
       <View
         ref={ref}
         style={{
           alignItems: "center",
-          width: "100%",
-          backgroundColor: BG,
+          flex: 1,
+          width: Dimensions.get("screen").width,
+          backgroundColor: '#fff',
           paddingTop: 16,
           gap: 8,
           borderBottomWidth: 1,
@@ -43,7 +53,7 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
         }}
       >
         <AvatarImage />
-        <AppText variant="body1Black">{user?.name}</AppText>
+        <AppText variant="body1Black">Dennis Ikebuiro</AppText>
         <View style={[AppStyles.row, { gap: 32 }]}>
           <View style={{ alignItems: "center" }}>
             <AppText variant="headerXlBlack">{36}</AppText>
@@ -58,27 +68,33 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
             <AppText variant="body1">following</AppText>
           </View>
         </View>
+
+        <AppText variant="body1" style={{ alignSelf: "center", paddingHorizontal: 19, fontSize: 14 }}>
+          Lorem ipsum dolor sit amet consectetur. Pharetra nulla lorem justo lectus sit. Purus magna leo pulvinar aliquet risus. Etiam lorem sem adipiscing et. Lorem sagittis ipsum.
+        </AppText>
+
         <View style={[AppStyles.row, { gap: 8, marginTop: 16 }]}>
           <AppButton
-            color={LIGHT_GREY}
-            textColor={TEXT_DARKER}
+            color={"#F1F4FF"}
+            textColor={"#6B6F80"}
             style={{
               width: "auto",
               minWidth: 120,
-
+              backgroundColor: "#F1F4FF",
               padding: 12,
               borderRadius: 16,
             }}
+            onPress={EditHandler}
           >
             Edit Profile
           </AppButton>
           <AppButton
             color={LIGHT_GREY}
-            textColor={TEXT_DARKER}
+            textColor={"#6B6F80"}
             style={{
               width: "auto",
               minWidth: 120,
-
+              backgroundColor: "#F1F4FF",
               padding: 12,
               borderRadius: 16,
             }}
@@ -94,11 +110,35 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
 export default function ProfileScreen() {
   const user = useUserProfile();
   const articles = useFlatListAPI(fetchExploreArticles, useExploreArticles);
-  const padding = useAppPadding();
+  const router = useRouter();
+  // const padding = useAppPadding();
   return (
-    <AppScreen noPadding>
+    <AppScreen backgroundColor={'#fff'} noPadding>
+      <Stack.Screen options={{ headerShown: false }} />
       <Section style={{ width: "100%" }}>
-        <AppHeader disableBack title={user?.name} actions={["notifications"]} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 6, paddingVertical: 10 }}>
+          <AppText variant="body1Black">Dennis_IK</AppText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <TouchableOpacity 
+              style={{ 
+                backgroundColor: "#f7f8ff", 
+                borderRadius: 20, 
+                paddingHorizontal: 13, 
+                paddingVertical: 3, 
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4
+                }}
+              >
+                <Notification size={18} color="#8F94AA" />
+                <AppText variant="body1Bold">0</AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => router.push('/settings')}>
+                <HambergerMenu size={20} color="#8F94AA" />
+              </TouchableOpacity>
+          </View>
+        </View>
       </Section>
 
       <FlatList
@@ -117,7 +157,7 @@ export default function ProfileScreen() {
         contentContainerStyle={{
           gap: 8,
           width: "100%",
-          paddingHorizontal: padding,
+          // paddingHorizontal: ,
         }}
         numColumns={3}
         columnWrapperStyle={{ gap: 8 }}

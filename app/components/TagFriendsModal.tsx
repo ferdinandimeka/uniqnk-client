@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import Form, { FormInput } from "./AppForm";
+import AppScreen from "./AppScreen";
 import AvatarImage from "./AvatarImage";
 import DecoratedTextField from "./DecoratedTextField";
 import IconButton2 from "./IconButton2";
@@ -46,88 +47,90 @@ const TagFriendsModal: React.FC<ModalArgs> = ({ dismiss, visible }) => {
         { transform: [{ translateX: slideAnim }] },
       ]}
     >
-       <Section
-            as={SafeAreaView}
-            style={{
-                width: "100%",
-                backgroundColor: "#fff",
-                // elevation: 4,
-                paddingBottom: 16,
-                // borderWidth: 1,
-            }}
-        >
-            {/* header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={dismiss}>
-                    <ArrowSquareLeft size={24} color="#000" />
-                </TouchableOpacity>
-
-                <Text style={styles.headerTitle}>Tag Friends</Text>
-                {/* Dummy spacer to balance the avatar on the right side */}
-                <View style={{ width: 40 }} />
-            </View>
-        </Section>
-
-        <Form>
-            <View
+        <AppScreen noPadding backgroundColor="#fff" style={{ flex: 1 }}>
+            <Section
+                as={SafeAreaView}
                 style={{
-                    flexDirection: "row",
+                    width: "100%",
+                    backgroundColor: "#fff",
+                    // elevation: 4,
+                    paddingBottom: 16,
+                    // borderWidth: 1,
                 }}
             >
-                <FormInput
-                    as={DecoratedTextField}
-                    name="search"
-                    prefix={<IconButton2 icon={Search} size={15} />}
-                    containerStyle={{ flex: 1 }}
-                    outlined
-                    noMargin
-                    placeholder="Search Friends list"
-                />
-            </View>
-        </Form>
+                {/* header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={dismiss}>
+                        <ArrowSquareLeft size={24} color="#000" />
+                    </TouchableOpacity>
 
-        <View style={styles.friendSection}>
-            <View style={styles.friends}>
-                <View style={styles.friend}>
-                    <AvatarImage bordered image={null} size={40} />
-                    <Text style={styles.friendName}>Robert Fox</Text>
+                    <Text style={styles.headerTitle}>Tag Friends</Text>
+                    {/* Dummy spacer to balance the avatar on the right side */}
+                    <View style={{ width: 40 }} />
                 </View>
-                <View style={styles.friend}>
-                    <AvatarImage bordered image={null} size={40} />
-                    <Text style={styles.friendName}>Eleanor Pena</Text>
-                </View>
-                <View style={styles.friend}>
-                    <AvatarImage bordered image={null} size={40} />
-                    <Text style={styles.friendName}>Theresa Webb</Text>
-                </View>
-                <View style={styles.friend}>
-                    <AvatarImage bordered image={null} size={40} />
-                    <Text style={styles.friendName}>Guy Hawkins</Text>
-                </View>
-            </View>
+            </Section>
 
-            <View style={styles.friends}>
-                <Text style={styles.suggestedFriendsTitle}>Suggested</Text>
+            <Form>
+                <View
+                    style={{
+                        flexDirection: "row",
+                    }}
+                >
+                    <FormInput
+                        as={DecoratedTextField}
+                        name="search"
+                        prefix={<IconButton2 icon={Search} size={15} />}
+                        containerStyle={{ flex: 1 }}
+                        outlined
+                        noMargin
+                        placeholder="Search Friends list"
+                    />
+                </View>
+            </Form>
+
+            <View style={styles.friendSection}>
                 <View style={styles.friends}>
                     <View style={styles.friend}>
                         <AvatarImage bordered image={null} size={40} />
-                        <Text style={styles.friendName}>Devon Lane</Text>
+                        <Text style={styles.friendName}>Robert Fox</Text>
                     </View>
                     <View style={styles.friend}>
                         <AvatarImage bordered image={null} size={40} />
-                        <Text style={styles.friendName}>Annette Black</Text>
+                        <Text style={styles.friendName}>Eleanor Pena</Text>
                     </View>
                     <View style={styles.friend}>
                         <AvatarImage bordered image={null} size={40} />
-                        <Text style={styles.friendName}>Savannah Nguyen</Text>
+                        <Text style={styles.friendName}>Theresa Webb</Text>
                     </View>
                     <View style={styles.friend}>
                         <AvatarImage bordered image={null} size={40} />
-                        <Text style={styles.friendName}>Jane Cooper</Text>
+                        <Text style={styles.friendName}>Guy Hawkins</Text>
+                    </View>
+                </View>
+
+                <View style={styles.friends}>
+                    <Text style={styles.suggestedFriendsTitle}>Suggested</Text>
+                    <View style={styles.friends}>
+                        <View style={styles.friend}>
+                            <AvatarImage bordered image={null} size={40} />
+                            <Text style={styles.friendName}>Devon Lane</Text>
+                        </View>
+                        <View style={styles.friend}>
+                            <AvatarImage bordered image={null} size={40} />
+                            <Text style={styles.friendName}>Annette Black</Text>
+                        </View>
+                        <View style={styles.friend}>
+                            <AvatarImage bordered image={null} size={40} />
+                            <Text style={styles.friendName}>Savannah Nguyen</Text>
+                        </View>
+                        <View style={styles.friend}>
+                            <AvatarImage bordered image={null} size={40} />
+                            <Text style={styles.friendName}>Jane Cooper</Text>
+                        </View>
                     </View>
                 </View>
             </View>
-        </View>
+        </AppScreen>
     </Animated.View>
   );
 };

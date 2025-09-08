@@ -1,3 +1,4 @@
+import AppScreen from "@/app/components/AppScreen";
 import * as ImagePicker from "expo-image-picker";
 import { Stack } from "expo-router"; // Adjust the import path as needed
 import { ArrowSquareLeft, Camera, GalleryImport, Location, Tag, Video } from "iconsax-react-native";
@@ -16,10 +17,10 @@ import {
 import { TextInput } from "react-native-gesture-handler"; // Adjust the import path as needed
 import AvatarImage from "../../components/AvatarImage";
 import { useOpenModal } from "../../components/ModalContext";
+import PostBottomSheet from "../../components/PostBottomSheet";
 import Section from "../../components/Section";
 import SelectLocationModal from "../../components/SelectLocationModal";
 import TagFriendsModal from "../../components/TagFriendsModal";
-import PostBottomSheet from "../../components/PostBottomSheet";
 
 const LitPostScreen = () => {
   const [text, setText] = useState("");
@@ -89,7 +90,7 @@ const LitPostScreen = () => {
     }
 
   return (
-    <View style={styles.container}>
+    <AppScreen noPadding style={styles.container}>
         <ScrollView style={{ backgroundColor: "#fff" }}>
             <Stack.Screen options={{ headerShown: false }} />
             <Section
@@ -166,7 +167,7 @@ const LitPostScreen = () => {
         <TouchableOpacity style={{ bottom: 20, alignSelf: "center", borderRadius: 32, backgroundColor: "#00A3FF", width: "90%", padding: 16 }} onPress={postHandler}>
             <Text style={{ color: "#fff", textAlign: "center" }}>Post</Text>
         </TouchableOpacity>
-    </View>
+    </AppScreen>
   );
 };
 
@@ -197,7 +198,13 @@ const styles = StyleSheet.create({
         color: "#6B6F80"
     },
     mediaContainer: {
-
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 10,
+        marginTop: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        // paddingBottom: 20
     },
     mediaImage: {
         height: 289,
