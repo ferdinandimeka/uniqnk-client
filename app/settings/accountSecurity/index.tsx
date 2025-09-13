@@ -1,24 +1,23 @@
 // import * as ImagePicker from "expo-image-picker";
+import AuthBottomSheet from "@/app/components/AuthBottomSheet";
+import ChangePasswordBottomSheet from "@/app/components/ChangePasswordBottomSheet";
 import { useRouter } from "expo-router";
 import { ArrowRight2, ArrowSquareLeft } from "iconsax-react-native";
 import React, { useState } from "react";
 import {
-    // Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
+  // Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import AppScreen from "../../components/AppScreen";
-import AppText from "../../components/AppText";
-import AvatarImage from "../../components/AvatarImage";
-import ConfirmChangeBottomSheet from "../../components/ConfirmChangeBottomSheet";
 import { useOpenModal } from "../../components/ModalContext";
 import Section from "../../components/Section";
 
@@ -58,49 +57,43 @@ const AccountSetting = () => {
                 <ArrowSquareLeft size={24} color="#000" />
               </TouchableOpacity>
 
-              <Text style={styles.headerTitle}>Account Settings</Text>
+              <Text style={styles.headerTitle}>Account Security</Text>
               <View style={{ width: 40 }} />
             </View>
           </Section>
 
-          {/* Avatar */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingBottom: 10,
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                flexDirection: "column",
-                gap: 6,
-                alignItems: "center",
-              }}
-            >
-              <AvatarImage bordered size={40} />
-              <AppText variant="body1">Dennis Ikebuiro</AppText>
-              <AppText variant="body1">@DennisK</AppText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.settingsContent}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, paddingHorizontal: 6 }}>
-                <Text style={{ fontWeight: "bold", fontSize: 15 }}>Temporarily disable account</Text>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
-            </View>
-            
+        <View style={styles.settingsContent}>
             <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
-                <ConfirmChangeBottomSheet
-                    title="Restrict Account" 
+                <ChangePasswordBottomSheet
+                    Password
+                    title={"Change Password"}
                     dismiss={dismiss} 
                     visible={visible} 
                 />
             ), {})}>
                 <View style={styles.content}>
-                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Restrict Account</Text>
-                    <Text style={{ color: "gray" }}>Stop transactions in emergency situations</Text>
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Password</Text>
+                    <Text style={{ color: "gray" }}>Change Password</Text>
+                </View>
+
+                <ArrowRight2
+                    size="16"
+                    color="#555555"
+                    variant="Linear"
+                />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
+                <ChangePasswordBottomSheet
+                    Pin
+                    // title="Enter Current Pin"
+                    dismiss={dismiss} 
+                    visible={visible} 
+                />
+            ), {})}>
+                <View style={styles.content} >
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Transaction Pin</Text>
+                    <Text style={{ color: "gray" }}>Change pin</Text>
                 </View>
 
                 <ArrowRight2
@@ -110,16 +103,52 @@ const AccountSetting = () => {
                 />
             </TouchableOpacity>
 
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={styles.content} >
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "grey" }}>Biometric Login</Text>
+                    <Text style={{ color: "gray" }}>Enable/Disable</Text>
+                </View>
+                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={styles.content} >
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "grey" }}>PIN + Biometric Authentication</Text>
+                    <Text style={{ color: "gray" }}>Phone Number</Text>
+                </View>
+                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+            </View>
+
             <TouchableOpacity style={styles.contents}>
                 <View style={styles.content} >
-                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "red" }}>Close Account</Text>
-                    <Text style={{ color: "gray" }}>Deactive your Uniqnk Account</Text>
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Security Question</Text>
+                    <Text style={{ color: "gray" }}>Change security question</Text>
                 </View>
 
                 <ArrowRight2
-                size="16"
-                color="#555555"
-                variant="Linear"
+                    size="16"
+                    color="#555555"
+                    variant="Linear"
+                />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
+                <AuthBottomSheet
+                    auth_method
+                    title="Choose Authentication Method"
+                    dismiss={dismiss} 
+                    visible={visible} 
+                />
+            ), {})}>
+                <View style={styles.content} >
+                    <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Two-factor authentication</Text>
+                    {/* <Text style={{ color: "gray" }}>Deactive your Uniqnk Account</Text> */}
+                </View>
+
+                <ArrowRight2
+                    size="16"
+                    color="#555555"
+                    variant="Linear"
                 />
             </TouchableOpacity>
         </View>
@@ -151,7 +180,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   settingsContent: {
-    paddingVertical: 20,
+    paddingVertical: 0,
     paddingHorizontal: 16,
     gap: 20,
     flex: 1,
@@ -160,8 +189,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
-    paddingHorizontal: 6
+    // marginTop: 10,
+    paddingHorizontal: 0
   },
   content: {
     flexDirection: "column",

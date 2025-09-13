@@ -24,8 +24,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ActivityModal from "../components/ActivityModal";
 import AppScreen from "../components/AppScreen";
 import { useOpenModal } from "../components/ModalContext";
+import PrivacyBottomSheet from "../components/PrivacyBottomSheet";
 import Section from "../components/Section";
 
 const { width } = Dimensions.get("window");
@@ -96,7 +98,7 @@ const Settings = () => {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.contents}>
+              <TouchableOpacity style={styles.contents} onPress={() => router.push('/settings/notification')}>
                 <View style={styles.content}>
                   <Notification
                     size="16"
@@ -130,7 +132,7 @@ const Settings = () => {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.contents}>
+              <TouchableOpacity style={styles.contents} onPress={() => openModal(ActivityModal, {})}>
                 <View style={styles.content}>
                   <Activity
                     size="16"
@@ -147,7 +149,7 @@ const Settings = () => {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.contents}>
+              <TouchableOpacity style={styles.contents} onPress={() => openModal(PrivacyBottomSheet, {})}>
                 <View style={styles.content}>
                   <Eye
                     size="16"
@@ -164,7 +166,7 @@ const Settings = () => {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.contents}>
+              <TouchableOpacity style={styles.contents} onPress={() => router.push('/settings/accountRestrictions')}>
                 <View style={styles.content}>
                   <ShieldSecurity
                     size="16"
