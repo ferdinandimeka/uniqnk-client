@@ -18,19 +18,21 @@ import {
 // import { TabsParamList } from "@/navigation/TabsRouter";
 import AppText from "@/app/components/AppText";
 import React from "react";
-import { Dimensions, Image, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, Pressable, TouchableOpacity, View } from "react-native";
 // import { AppScreenProps } from "../../../navigation/RootRouter";
 import Section from "@/app/components/Section";
 // import { useAppPadding } from "@/redux/ui/uiActions";
+import FollowersModal from "@/app/components/FollowersModal";
+import { useOpenModal } from "@/app/components/ModalContext";
+import NotificationModal from "@/app/components/NotificationModal";
 import { Stack, useRouter } from "expo-router";
 import { HambergerMenu, Notification } from "iconsax-react-native";
-
 
 const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
   function ProfileScreenHeader({ user }, ref) {
     user = useUserProfile();
-    // const openModal = useOpenModal();
     const router = useRouter();
+     const openModal = useOpenModal();
     
     const EditHandler = () => {
       // openModal(ProfileModal, {}) // 🎁 open edit profile
@@ -59,14 +61,14 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
             <AppText variant="headerXlBlack">{36}</AppText>
             <AppText variant="body1">posts</AppText>
           </View>
-          <View style={{ alignItems: "center" }}>
+          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, {})}>
             <AppText variant="headerXlBlack">{43}</AppText>
             <AppText variant="body1">followers</AppText>
-          </View>
-          <View style={{ alignItems: "center" }}>
+          </Pressable>
+          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, {})}>
             <AppText variant="headerXlBlack">{72}</AppText>
             <AppText variant="body1">following</AppText>
-          </View>
+          </Pressable>
         </View>
 
         <AppText variant="body1" style={{ alignSelf: "center", paddingHorizontal: 19, fontSize: 14 }}>
@@ -111,6 +113,7 @@ export default function ProfileScreen() {
   const user = useUserProfile();
   const articles = useFlatListAPI(fetchExploreArticles, useExploreArticles);
   const router = useRouter();
+  const openModal = useOpenModal();
   // const padding = useAppPadding();
   return (
     <AppScreen backgroundColor={'#fff'} noPadding>
@@ -119,7 +122,7 @@ export default function ProfileScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 6, paddingVertical: 10 }}>
           <AppText variant="body1Black">Dennis_IK</AppText>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <TouchableOpacity 
+            <Pressable 
               style={{ 
                 backgroundColor: "#f7f8ff", 
                 borderRadius: 20, 
@@ -129,10 +132,11 @@ export default function ProfileScreen() {
                 alignItems: "center",
                 gap: 4
                 }}
+                onPress={() => openModal(NotificationModal, {})}
               >
                 <Notification size={18} color="#8F94AA" />
                 <AppText variant="body1Bold">0</AppText>
-              </TouchableOpacity>
+              </Pressable>
 
               <TouchableOpacity onPress={() => router.push('/settings')}>
                 <HambergerMenu size={20} color="#8F94AA" />

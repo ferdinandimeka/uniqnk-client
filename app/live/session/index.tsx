@@ -3,13 +3,13 @@ import Section from '@/app/components/Section';
 import { Stack } from 'expo-router';
 import { CloseSquare, Eye } from "iconsax-react-native";
 import React from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AppScreen from "../../components/AppScreen";
 import AvatarImage from "../../components/AvatarImage";
 
 const StreamScreen = () => {
 
-    const { width, height } = Dimensions.get("window");
+    // const { width, height } = Dimensions.get("window");
 
   return (
     <AppScreen noPadding style={{ flex: 1, backgroundColor: "#000" }}>

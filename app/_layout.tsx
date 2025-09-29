@@ -87,6 +87,8 @@ const MainLayout = ({ isFirstTime }: { isFirstTime: boolean }) => {
       <Stack.Screen name="live" />
       <Stack.Screen name="post" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="messages" />
+      <Stack.Screen name="payment" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="auth" />

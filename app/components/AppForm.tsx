@@ -136,6 +136,13 @@ export default function Form<T extends object = any>({
   return <formContext.Provider value={value}>{children}</formContext.Provider>;
 }
 
+// inside AppForm.tsx
+export function useFormContext<T>() {
+  const ctx = useContext(formContext);
+  if (!ctx) throw new Error("useFormContext must be used inside a Form");
+  return ctx as FormContext<T>;
+}
+
 export function useField<T>(pathOrName: Path | string) {
   const form = useContext(formContext);
   if (!form) throw new Error("useField must be used inside a Form");
@@ -173,6 +180,7 @@ export type FormInputProps = {
   placeholder?: string;
   required?: boolean;
   name: string;
+  formatValue?: (val: string) => string; // 👈 added
 };
 
 export function FormInput<
@@ -184,6 +192,7 @@ export function FormInput<
   as: As = AppTextField as unknown as FormComponentType,
   name,
   onOpenDropdown,
+  formatValue, // 👈 destructure it
   ...props
 }: PolymorphicComponentProps<
   FormComponentType,
@@ -192,10 +201,25 @@ export function FormInput<
 >) {
   const field = useField<ValueType>(name);
 
+  // Format value for display, keep raw value in form state
+  const displayValue =
+    typeof field.value === "string" && formatValue
+      ? formatValue(field.value)
+      : field.value;
+
+  const handleUpdate = (val: any) => {
+    // Strip out ₦ before saving to state
+    if (typeof val === "string" && formatValue) {
+      field.update(val.replace(/[₦\s]/g, ""));
+    } else {
+      field.update(val);
+    }
+  };
+
   const InputComponent = (
     <As
-      update={field.update}
-      value={field.value}
+      update={handleUpdate}
+      value={displayValue}
       name={name}
       error={!!field.error}
       noMargin={!!field.error}
@@ -210,7 +234,6 @@ export function FormInput<
       <FormLabel {...props} />
 
       {onOpenDropdown ? (
-        // Wrap input + arrow in a touchable
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onOpenDropdown}
@@ -218,7 +241,11 @@ export function FormInput<
         >
           <View style={{ flex: 1, position: "relative" }}>
             {InputComponent}
-            <ArrowDown2 size={20} color="#999" style={{ alignSelf: "flex-end", bottom: 35, right: 15 }} />
+            <ArrowDown2
+              size={20}
+              color="#999"
+              style={{ alignSelf: "flex-end", bottom: 35, right: 15 }}
+            />
           </View>
         </TouchableOpacity>
       ) : (
@@ -233,6 +260,66 @@ export function FormInput<
     </>
   );
 }
+
+
+// export function FormInput<
+//   ValueType = string,
+//   FormComponentType extends IFormElement<ValueType> = typeof AppTextField extends IFormElement<ValueType>
+//     ? typeof AppTextField
+//     : never
+// >({
+//   as: As = AppTextField as unknown as FormComponentType,
+//   name,
+//   onOpenDropdown,
+//   ...props
+// }: PolymorphicComponentProps<
+//   FormComponentType,
+//   FormInputProps & { onOpenDropdown?: () => void },
+//   FormComponentProps<ValueType>
+// >) {
+//   const field = useField<ValueType>(name);
+
+//   const InputComponent = (
+//     <As
+//       update={field.update}
+//       value={field.value}
+//       name={name}
+//       error={!!field.error}
+//       noMargin={!!field.error}
+//       editable={!onOpenDropdown} // disable keyboard if dropdown
+//       pointerEvents={onOpenDropdown ? "none" : "auto"} // prevent focus
+//       {...props}
+//     />
+//   );
+
+//   return (
+//     <>
+//       <FormLabel {...props} />
+
+//       {onOpenDropdown ? (
+//         // Wrap input + arrow in a touchable
+//         <TouchableOpacity
+//           activeOpacity={0.8}
+//           onPress={onOpenDropdown}
+//           style={{ flexDirection: "row", alignItems: "center" }}
+//         >
+//           <View style={{ flex: 1, position: "relative" }}>
+//             {InputComponent}
+//             <ArrowDown2 size={20} color="#999" style={{ alignSelf: "flex-end", bottom: 35, right: 15 }} />
+//           </View>
+//         </TouchableOpacity>
+//       ) : (
+//         InputComponent
+//       )}
+
+//       {field.error && (
+//         <AppText variant="body1" style={{ color: RED, ...AppStyles.mb }}>
+//           {field.error}
+//         </AppText>
+//       )}
+//     </>
+//   );
+// }
 
 
 export function FormLabel({
