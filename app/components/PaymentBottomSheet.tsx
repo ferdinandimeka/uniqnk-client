@@ -125,11 +125,11 @@ const PaymentBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => {
              You transaction has failed. This could be due to Network issues or a service downtime.
             </Text>
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.button} onPress={() => goToStep(0)}>
-                <AppText variant="body1">Retry</AppText>
+              <TouchableOpacity style={styles.button} onPress={dismiss}>
+                <AppText variant="body1White">Cancel</AppText>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button2} onPress={dismiss}>
-                <AppText variant="body1White">Close</AppText>
+              <TouchableOpacity style={styles.button2} onPress={() => goToStep(0)}>
+                <AppText variant="body1">Retry Transaction</AppText>
               </TouchableOpacity>
             </View>
           </View>
