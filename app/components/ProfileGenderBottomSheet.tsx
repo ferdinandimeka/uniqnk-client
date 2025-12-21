@@ -1,17 +1,28 @@
-// GiftModal.tsx
 import React, { useState } from "react";
 import {
   Modal,
   Pressable,
   StyleSheet,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import AppText from "./AppText";
 import { ModalArgs } from "./ModalContext";
 
-const ProfileGenderBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => {
-  const [selectedGender, setSelectedGender] = useState<string | null>(null);
+interface GenderModalProps extends ModalArgs {
+  onSelect: (val: string) => void;
+  initialValue?: string;
+}
+
+const ProfileGenderBottomSheet: React.FC<GenderModalProps> = ({
+  dismiss,
+  visible,
+  onSelect,
+  initialValue,
+}) => {
+  const [selectedGender, setSelectedGender] = useState<string | null>(
+    initialValue || null
+  );
 
   const genders = ["Male", "Female", "Others", "Prefer not to say"];
 
@@ -28,7 +39,10 @@ const ProfileGenderBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => 
       {/* Bottom sheet */}
       <View style={styles.sheet}>
         <View style={styles.border} />
-        <AppText variant="body1" style={styles.title}>Gender</AppText>
+        <AppText variant="body1" style={styles.title}>
+          Select Gender
+        </AppText>
+
         {genders.map((gender) => {
           const selected = selectedGender === gender;
           return (
@@ -37,7 +51,9 @@ const ProfileGenderBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => 
               onPress={() => setSelectedGender(gender)}
               style={styles.option}
             >
-              <AppText variant="body1Light" style={styles.optionText}>{gender}</AppText>
+              <AppText variant="body1Light" style={styles.optionText}>
+                {gender}
+              </AppText>
               <View
                 style={[
                   styles.radioOuter,
@@ -49,18 +65,21 @@ const ProfileGenderBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => 
             </TouchableOpacity>
           );
         })}
+
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => {
-            // Handle confirm action
-            dismiss();
-          }}>
+          <TouchableOpacity style={styles.button} onPress={dismiss}>
             <AppText variant="body1">Cancel</AppText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button2} onPress={() => {
-            // Handle confirm action
-            dismiss();
-          }}>
+          <TouchableOpacity
+            style={styles.button2}
+            onPress={() => {
+              if (selectedGender) {
+                onSelect(selectedGender);
+              }
+              dismiss();
+            }}
+          >
             <AppText variant="body1White">Save</AppText>
           </TouchableOpacity>
         </View>
@@ -141,7 +160,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    color: "#333",
     backgroundColor: "#F1F4FF",
   },
   button2: {
@@ -151,7 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    color: "#fff",
     backgroundColor: "#384CFF",
-  }
+  },
 });

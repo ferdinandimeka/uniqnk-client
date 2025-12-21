@@ -387,5 +387,11 @@ export function FormSubmit(
   const form = useContext(formContext);
   if (!form) throw new Error("FormSubmit must be used inside a Form");
 
-  return <AppButton onPress={form.submit} {...props} />;
+  const handlePress = async () => {
+    console.log("FormSubmit pressed"); // <-- should log
+    await form.submit();
+    props.onPress?.(); // ✅ runs extra logic after successful submit
+  };
+
+  return <AppButton {...props} onPress={handlePress} />;
 }

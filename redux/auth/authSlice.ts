@@ -44,7 +44,9 @@ export default function authReducer(
       return {
         ...state,
         isLoggingIn: false,
+        isAuthenticated: false,   // 🚨 make sure user is NOT logged in
         loginError: action.payload,
+        user: null,               // clear any stale user
       };
     case CLEAR_LOGIN_ERROR:
       return {

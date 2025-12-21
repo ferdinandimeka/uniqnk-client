@@ -1,8 +1,11 @@
 import AppScreen from "@/app/components/AppScreen";
+import { useAuthStore } from "@/store/useAuthStore";
+import { usePostStore } from "@/store/usePostStore";
 import * as ImagePicker from "expo-image-picker";
-import { Stack } from "expo-router"; // Adjust the import path as needed
+import * as Locations from 'expo-location';
+import { Stack, useRouter } from "expo-router"; // Adjust the import path as needed
 import { ArrowSquareLeft, Camera, GalleryImport, Location, Tag, Video } from "iconsax-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Alert,
     Dimensions,
@@ -25,8 +28,41 @@ import TagFriendsModal from "../../components/TagFriendsModal";
 const LitPostScreen = () => {
   const [text, setText] = useState("");
   const [media, setMedia] = useState<string[]>([]);
+  const [location, setLocation] = useState<{ name?: string; latitude?: number; longitude?: number }>({});
+  const { createPost } = usePostStore();
+  const { users } = useAuthStore();
+  const userId = users?.data?.user._id || "";
+  const profilePhoto = users?.data?.user.profilePicture || "";
 //   const [showTagModal, setShowTagModal] = useState(false);
 //   const { height, width } = Dimensions.get("window");
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Locations.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        return;
+      }
+
+      const loc = await Locations.getCurrentPositionAsync({});
+      const reverseGeocode = await Locations.reverseGeocodeAsync({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+
+      const place = reverseGeocode[0];
+      const name = place
+        ? `${place.city || place.region || ''}, ${place.country || ''}`.trim()
+        : 'Unknown location';
+
+      setLocation({
+        name,
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+    })();
+  }, []);
 
    // 📸 Take Photo with Camera
   const openCamera = async () => {
@@ -85,9 +121,40 @@ const LitPostScreen = () => {
         openModal(SelectLocationModal, {}) // 📍 open location selection
     }
 
-    const postHandler = () => {
-        openModal(PostBottomSheet, {}) // open post bottom sheet
-    }
+    // const postHandler = () => {
+    //     openModal(PostBottomSheet, {}) // open post bottom sheet
+    // }
+
+    const postHandler = async () => {
+        if (!text.trim() && media.length === 0) {
+            Alert.alert("Empty Post", "Please add text or media before posting.");
+            return;
+        }
+
+        try {
+            openModal(PostBottomSheet, {});
+
+            const result = await createPost({
+                content: text,
+                mediaUrls: media,
+                user: userId,
+                location
+            // Add other post fields as necessary
+            });
+
+            if (result) {
+            openModal(PostBottomSheet, {});
+            setText("");
+            setMedia([]);
+            } else {
+            Alert.alert("Error", "Failed to create post. Please try again.");
+            }
+        } catch (err) {
+            console.error("Error creating post:", err);
+            Alert.alert("Error", "Something went wrong while creating your post.");
+        }
+    };
+
 
   return (
     <AppScreen noPadding style={styles.container}>
@@ -106,18 +173,18 @@ const LitPostScreen = () => {
                 {/* header */}
                 <View style={styles.header}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 20}}>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.back()}>
                             <ArrowSquareLeft size={24} color="#000" />
                         </TouchableOpacity>
 
                         <TouchableOpacity>
-                            <AvatarImage bordered image={null} size={30} />
+                            <AvatarImage bordered image={profilePhoto} size={30} />
                         </TouchableOpacity>
                     </View>
 
                     <Text style={styles.headerTitle}>Create Post</Text>
                     {/* Dummy spacer to balance the avatar on the right side */}
-                    <View style={{ width: 40 }} />
+                    <View style={{ width: 70 }} />
                 </View>
             </Section>
 

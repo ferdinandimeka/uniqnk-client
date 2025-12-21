@@ -64,7 +64,7 @@ const SelectLocationModal: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <ArrowSquareLeft size={24} color="#000" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Tag Friends</Text>
+                <Text style={styles.headerTitle}>Select Location</Text>
                 {/* Dummy spacer to balance the avatar on the right side */}
                 <View style={{ width: 40 }} />
             </View>

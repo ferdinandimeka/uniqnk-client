@@ -1,61 +1,60 @@
-import { bigBlueLogo } from "@/common/assets";
-import { TEXT_LIGHTER } from "@/common/theming/colors";
-import AppStyles from "@/common/theming/styles";
-// import formatError from "@/common/utils/format_error";
 import AppButton from "@/app/components/AppButton";
 import Form, { FormInput, FormSubmit } from "@/app/components/AppForm";
 import { FormCheckbox, FormPassword } from "@/app/components/AppFormComponents";
 import AppScreen from "@/app/components/AppScreen";
 import AppText from "@/app/components/AppText";
 import DecoratedTextField from "@/app/components/DecoratedTextField";
-// import { useAuth, useLogin, useSignUp } from "@/data/features/auth/authActions";
-// import { CLEAR_LOGIN_ERROR } from "@/data/features/auth/authSlice";
-// import { DONE_WELCOME } from "@/data/features/ui/uiSlice";
-// import { AppDispatch, RootState } from "@/data/store";
-// import { AppScreenProps, RootParamList } from "@/navigation/RootRouter";
-import { useRouter } from 'expo-router';
+import { bigBlueLogo } from "@/common/assets";
+import { TEXT_LIGHTER } from "@/common/theming/colors";
+import AppStyles from "@/common/theming/styles";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "expo-router";
 import { Lock, Sms } from "iconsax-react-native";
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import {
   Animated,
   Image,
   Pressable,
+  Text,
   useAnimatedValue,
-  View,
+  View
 } from "react-native";
-// import { useDispatch, useSelector } from "react-redux";
+import Toast from "react-native-toast-message";
 
 export default function LoginScreen() {
-  // const [loggingIn, setIsLoggingIn] = useState(route.name === "Login");
-
-  // const login = useLogin();
-  // const signup = useSignUp();
-  // const dispatch = useDispatch<AppDispatch>();
-  // const doneWelcome = useSelector((e: RootState) => e.ui.welcome_shown);
-  // console.log({ doneWelcome });
-  // useEffect(() => {
-  //   if (!doneWelcome) dispatch({ type: DONE_WELCOME });
-  // }, [doneWelcome, dispatch]);
-  // const error = useAuth().loginError;
-
-  // useEffect(() => {
-  //   if (error) {
-  //     Toast.show({
-  //       type: "error",
-  //       text1: error.error || formatError(error.detail),
-  //       text2: error.error && formatError(error.detail),
-  //     });
-  //     return () => {
-  //       dispatch({ type: CLEAR_LOGIN_ERROR });
-  //     };
-  //   }
-  // }, [error, dispatch]);
   const size = useAnimatedValue(96);
   const navigation = useRouter();
 
-  const handleSubmit = () => {
-    navigation.replace("/tabs");
-  }
+  // ✅ Zustand store
+  const {
+    isLoggingIn,
+    error,
+    isAuthenticated,
+    login,
+    clearError,
+  } = useAuthStore();
+
+  const handleSubmit = async (data: { email: string; password: string }) => {
+    console.log("Form submitted with", data);
+    await login(data.email, data.password);
+  };
+
+  // ✅ react to store changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigation.replace("/tabs");
+    }
+  }, [isAuthenticated, navigation]);
+
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: error,
+      });
+      clearError();
+    }
+  }, [error, clearError]);
 
   useLayoutEffect(() => {
     Animated.timing(size, {
@@ -64,6 +63,7 @@ export default function LoginScreen() {
       useNativeDriver: false,
     }).start();
   }, [size]);
+
   return (
     <AppScreen scrollable style={{ alignItems: "center", paddingTop: 32 }}>
       <Animated.Image
@@ -86,25 +86,18 @@ export default function LoginScreen() {
       <AppText variant="bodyLg" style={AppStyles.mb}>
         Your one-stop social marketplace
       </AppText>
+      {error && <Text style={{ color: "red", marginVertical: 10 }}>{error}</Text>}
       <Form
-        initialValue={{
-          fullName: "",
-          email: "",
-          businessName: undefined,
-          password: "",
-        }}
+        initialValue={{ email: "", password: "" }}
         onValidate={(data) => {
-          const errors = {};
-          if (!data.email) {
-            errors["email"] = "This field is required";
-          } else if (!data.email.match(/.*@.*\..*/)) {
+          const errors: Record<string, string> = {};
+          if (!data.email) errors["email"] = "This field is required";
+          else if (!/.*@.*\..*/.test(data.email))
             errors["email"] = "Enter a valid email";
-          }
-          if (Object.keys(errors).length) return { errors };
+          if (!data.password) errors["password"] = "Password is required";
+          return Object.keys(errors).length > 0 ? { errors } : null;
         }}
-        onSubmit={async (data) => {
-          await login(data.email, data.password);
-        }}
+        onSubmit={handleSubmit}
       >
         <View style={{ width: "100%" }}>
           <FormInput
@@ -114,7 +107,7 @@ export default function LoginScreen() {
             prefix={<Sms color={TEXT_LIGHTER} size={20} variant="Outline" />}
             placeholder="Email Address"
             outlined
-          ></FormInput>
+          />
 
           <FormPassword
             name="password"
@@ -124,12 +117,7 @@ export default function LoginScreen() {
             prefix={<Lock color={TEXT_LIGHTER} size={20} variant="Bold" />}
           />
 
-          <View
-            style={{
-              flexDirection: "row",
-              display: "flex",
-            }}
-          >
+          <View style={{ flexDirection: "row", display: "flex" }}>
             <FormCheckbox
               name="rememberPassword"
               style={{ marginRight: 4 }}
@@ -144,22 +132,21 @@ export default function LoginScreen() {
               Forgot Password
             </AppButton>
           </View>
-          <FormSubmit onPress={handleSubmit} variant="full" style={[AppStyles.mt, AppStyles.mb]}>Continue</FormSubmit>
-          {/* {!loggingIn ? ( */}
-            {/* <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              <AppText variant="body1Darker">Already have an account? </AppText>
-              <Pressable onPress={() => setIsLoggingIn(true)}>
-                <AppText variant="body1Link">Sign In</AppText>
-              </Pressable>
-            </View> */}
-          {/* ) : ( */}
-            <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              <AppText variant="body1Darker">Don't have an account? </AppText>
-              <Pressable onPress={() => navigation.replace("/auth/register")}>
-                <AppText variant="body1Link">Sign Up</AppText>
-              </Pressable>
-            </View>
-          {/* )} */}
+
+          <FormSubmit
+            variant="full"
+            style={[AppStyles.mt, AppStyles.mb]}
+            loading={isLoggingIn}
+          >
+            Continue
+          </FormSubmit>
+
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            <AppText variant="body1Darker">Don&apos;t have an account? </AppText>
+            <Pressable onPress={() => navigation.replace("/auth/register")}>
+              <AppText variant="body1Link">Sign Up</AppText>
+            </Pressable>
+          </View>
         </View>
       </Form>
 
@@ -173,6 +160,7 @@ export default function LoginScreen() {
       >
         <AppText variant="body1Darker">Or Continue with</AppText>
       </View>
+
       <View
         style={{
           flexDirection: "row",

@@ -7,6 +7,7 @@ import {
   PRIMARY_HOVER,
 } from "@/common/theming/colors";
 import TextStyles from "@/common/theming/text";
+import { useAuthStore } from "@/store/useAuthStore";
 import { BlurView } from "expo-blur";
 import { Tabs, useRouter } from "expo-router";
 import {
@@ -41,6 +42,9 @@ export default function TabsLayout() {
   const blurAnim = useRef(new Animated.Value(0)).current; // blur intensity
   const tabBarAnim = useRef(new Animated.Value(0)).current; // slide tab bar
   const overlaySlide = useRef(new Animated.Value(height)).current; // slide overlay up
+
+  const { users } = useAuthStore();
+  const picture = users?.data?.user.profilePicture;
 
   const animateBlurIn = () => {
     setShowPostOverlay(true);
@@ -94,7 +98,7 @@ export default function TabsLayout() {
       tabBarIcon: ({ color }: { color: string }) =>
         Icon !== null ? (
           Icon === AvatarImage ? (
-            <AvatarImage size={28} bordered />
+            <AvatarImage image={picture} size={28} bordered />
           ) : (
             <Icon color={color} variant="Linear" />
           )

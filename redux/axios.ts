@@ -35,7 +35,7 @@ function toFormData(e: any) {
 }
 
 class API {
-  baseURL = process.env.EXPO_PUBLIC_API_URL;
+  baseURL = "http://localhost:4000/api/v1";
   access_token: string | null = null;
   clearAccessToken() {
     this.access_token = null;
@@ -134,7 +134,7 @@ class API {
       onCookies,
     }: APIOptions = {}
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+     
     const _this = this;
     const cacheKey = method + " " + _this.baseURL + url;
     if (ttl > -1) {

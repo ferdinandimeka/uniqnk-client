@@ -1,21 +1,32 @@
-// GiftModal.tsx
 import React, { useState } from "react";
 import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import AppText from "./AppText";
 import { ModalArgs } from "./ModalContext";
 
-const ProfileMaritalStatusBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => {
-    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+interface MaritalStatusModalProps extends ModalArgs {
+  onSelect: (val: string) => void;
+  initialValue?: string;
+}
 
-    const status = ["Single", "Married", "Complicated", "Prefer not to say"];
+const ProfileMaritalStatusBottomSheet: React.FC<MaritalStatusModalProps> = ({
+  dismiss,
+  visible,
+  onSelect,
+  initialValue,
+}) => {
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(
+    initialValue || null
+  );
 
-    return (
+  const statuses = ["Single", "Married", "Complicated", "Prefer not to say"];
+
+  return (
     <Modal
       animationType="slide"
       transparent
@@ -28,9 +39,11 @@ const ProfileMaritalStatusBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible
       {/* Bottom sheet */}
       <View style={styles.sheet}>
         <View style={styles.border} />
-        <AppText variant="body1" style={styles.title}>Marital Status</AppText>
+        <AppText variant="body1" style={styles.title}>
+          Marital Status
+        </AppText>
 
-        {status.map((status) => {
+        {statuses.map((status) => {
           const selected = selectedStatus === status;
           return (
             <TouchableOpacity
@@ -38,7 +51,9 @@ const ProfileMaritalStatusBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible
               onPress={() => setSelectedStatus(status)}
               style={styles.option}
             >
-              <AppText variant="body1Light" style={styles.optionText}>{status}</AppText>
+              <AppText variant="body1Light" style={styles.optionText}>
+                {status}
+              </AppText>
               <View
                 style={[
                   styles.radioOuter,
@@ -50,18 +65,21 @@ const ProfileMaritalStatusBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible
             </TouchableOpacity>
           );
         })}
+
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => {
-            // Handle confirm action
-            dismiss();
-          }}>
+          <TouchableOpacity style={styles.button} onPress={dismiss}>
             <AppText variant="body1">Cancel</AppText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button2} onPress={() => {
-            // Handle confirm action
-            dismiss();
-          }}>
+          <TouchableOpacity
+            style={styles.button2}
+            onPress={() => {
+              if (selectedStatus) {
+                onSelect(selectedStatus);
+              }
+              dismiss();
+            }}
+          >
             <AppText variant="body1White">Save</AppText>
           </TouchableOpacity>
         </View>
@@ -130,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#384CFF",
   },
-   buttonContainer: {
+  buttonContainer: {
     flexDirection: "row",
     gap: 10,
     marginTop: 20,
@@ -138,21 +156,17 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    color: "#333",
     backgroundColor: "#F1F4FF",
   },
   button2: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    color: "#fff",
     backgroundColor: "#384CFF",
-  }
+  },
 });

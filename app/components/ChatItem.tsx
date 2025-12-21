@@ -1,21 +1,28 @@
+import { useChatStore } from "@/store/useChatStore";
 import { useRouter } from "expo-router";
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ChatItemProps {
+    id: string;
+    senderId: string;
     userAvatar: React.ReactNode;
     userName: string;
     chat: string;
     chatCount: number;
 }
 
-export const ChatItem: React.FC<ChatItemProps> = ({ userAvatar, userName, chat, chatCount }) => {
+export const ChatItem: React.FC<ChatItemProps> = ({ id, senderId, userAvatar, userName, chat, chatCount }) => {
     const router = useRouter();
+    const { markChatMessageAsRead } = useChatStore();
     const navigateHandler = () => {
+        markChatMessageAsRead(id);
         router.push({
             pathname: "/messages/chat",
             params: {
                 username: userName,
+                chatId: id,
+                senderId 
             }
         })
     }

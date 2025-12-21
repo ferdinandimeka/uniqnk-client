@@ -4,17 +4,18 @@ import { FlatList } from "react-native-gesture-handler";
 import AppButton from "@/app/components/AppButton";
 import AvatarImage from "@/app/components/AvatarImage";
 import {
-  BG,
   LIGHT_GREY
 } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
-import useFlatListAPI from "@/common/utils/use_flatlist_api";
-import { useUserProfile } from "@/redux/auth/authActions";
-import { AuthState } from "@/redux/auth/authSlice";
-import {
-  fetchExploreArticles,
-  useExploreArticles,
-} from "@/redux/posts/postsActions";
+import { useAuthStore } from "@/store/useAuthStore";
+import { usePostStore } from "@/store/usePostStore";
+// import useFlatListAPI from "@/common/utils/use_flatlist_api";
+// import { useUserProfile } from "@/redux/auth/authActions";
+// import { AuthState } from "@/redux/auth/authSlice";
+// import {
+//   fetchExploreArticles,
+//   useExploreArticles,
+// } from "@/redux/posts/postsActions";
 // import { TabsParamList } from "@/navigation/TabsRouter";
 import AppText from "@/app/components/AppText";
 import React from "react";
@@ -25,14 +26,29 @@ import Section from "@/app/components/Section";
 import FollowersModal from "@/app/components/FollowersModal";
 import { useOpenModal } from "@/app/components/ModalContext";
 import NotificationModal from "@/app/components/NotificationModal";
+import { Video } from "expo-av";
 import { Stack, useRouter } from "expo-router";
 import { HambergerMenu, Notification } from "iconsax-react-native";
 
-const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
-  function ProfileScreenHeader({ user }, ref) {
-    user = useUserProfile();
+const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(_, ref) {
+    const { users } = useAuthStore(); // ✅ get user from Zustand store
+    const { posts } = usePostStore()
+    // console.log("posts: ", posts)
+    // console.log("users: ", users)
+
+    // find total number of posts by user
+    const picture = users?.data?.user.profilePicture;
+    const userId = users?.data?.user._id
+    console.log("userId: ", userId)
+    const user = users?.data?.user;
+    const numOfPosts = posts.filter(post => post.user._id === userId).length
+
+    //get number of followers
+    const numOfFollowers = user?.followers?.length ?? 0
+    //get number of people following
+    const numOfFollowing = user?.following?.length ?? 0
     const router = useRouter();
-     const openModal = useOpenModal();
+    const openModal = useOpenModal();
     
     const EditHandler = () => {
       // openModal(ProfileModal, {}) // 🎁 open edit profile
@@ -54,25 +70,25 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
           paddingBottom: 24,
         }}
       >
-        <AvatarImage />
-        <AppText variant="body1Black">Dennis Ikebuiro</AppText>
+        <AvatarImage image={picture} />
+        <AppText variant="body1Black">{user?.fullName}</AppText>
         <View style={[AppStyles.row, { gap: 32 }]}>
           <View style={{ alignItems: "center" }}>
-            <AppText variant="headerXlBlack">{36}</AppText>
+            <AppText variant="headerXlBlack">{numOfPosts}</AppText>
             <AppText variant="body1">posts</AppText>
           </View>
-          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, {})}>
-            <AppText variant="headerXlBlack">{43}</AppText>
+          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, { id: userId })}>
+            <AppText variant="headerXlBlack">{numOfFollowers}</AppText>
             <AppText variant="body1">followers</AppText>
           </Pressable>
-          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, {})}>
-            <AppText variant="headerXlBlack">{72}</AppText>
+          <Pressable style={{ alignItems: "center" }} onPress={() => openModal(FollowersModal, { id: userId })}>
+            <AppText variant="headerXlBlack">{numOfFollowing}</AppText>
             <AppText variant="body1">following</AppText>
           </Pressable>
         </View>
 
         <AppText variant="body1" style={{ alignSelf: "center", paddingHorizontal: 19, fontSize: 14 }}>
-          Lorem ipsum dolor sit amet consectetur. Pharetra nulla lorem justo lectus sit. Purus magna leo pulvinar aliquet risus. Etiam lorem sem adipiscing et. Lorem sagittis ipsum.
+          {user?.bio}
         </AppText>
 
         <View style={[AppStyles.row, { gap: 8, marginTop: 16 }]}>
@@ -110,17 +126,31 @@ const ProfileScreenHeader = React.forwardRef<View, { user: AuthState["user"] }>(
 );
 
 export default function ProfileScreen() {
-  const user = useUserProfile();
-  const articles = useFlatListAPI(fetchExploreArticles, useExploreArticles);
+  const {users} = useAuthStore();
+  const { posts } = usePostStore()
+  const user = users?.data?.user;
+  const userId = users?.data?.user?._id;
+  // const articles = useFlatListAPI(fetchExploreArticles, useExploreArticles);
   const router = useRouter();
   const openModal = useOpenModal();
   // const padding = useAppPadding();
+
+  const userPosts = posts.filter(post => post.user._id === userId);
+
+  const mediaList = userPosts.flatMap(post =>
+    (post.mediaUrls || []).map(url => ({
+      id: post._id,
+      uri: url,
+      type: url.endsWith(".mp4") ? "video" : "image",
+    }))
+  );
+  console.log("posts in profile screen: ", posts)
   return (
     <AppScreen backgroundColor={'#fff'} noPadding>
       <Stack.Screen options={{ headerShown: false }} />
       <Section style={{ width: "100%" }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 6, paddingVertical: 10 }}>
-          <AppText variant="body1Black">Dennis_IK</AppText>
+          <AppText variant="body1Black">{user?.username}</AppText>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Pressable 
               style={{ 
@@ -145,13 +175,12 @@ export default function ProfileScreen() {
         </View>
       </Section>
 
-      <FlatList
-        // stickyHeaderIndices={[0]}
-        {...articles.flatListProps}
+      {/* <FlatList
+        data={}
         stickyHeaderIndices={[0]}
         stickyHeaderHiddenOnScroll
         ListHeaderComponent={ProfileScreenHeader}
-        data={articles.results}
+        // data={articles.results}
         style={{
           width: "100%",
           flex: 1,
@@ -175,6 +204,52 @@ export default function ProfileScreen() {
                   (Dimensions.get("screen").width / 3 - 16) *
                   (item.id % 5 === 0 ? 1 : 1.5),
                 flex: 1,
+                borderRadius: 8,
+              }}
+            />
+          );
+        }}
+      /> */}
+
+      <FlatList
+        data={mediaList}
+        keyExtractor={(item) => item.uri}
+        numColumns={3}
+        columnWrapperStyle={{ gap: 8 }}
+        contentContainerStyle={{ gap: 8, padding: 8 }}
+        stickyHeaderIndices={[0]}
+        stickyHeaderHiddenOnScroll
+        ListHeaderComponent={ProfileScreenHeader}
+        renderItem={({ item }) => {
+          const size = Dimensions.get("screen").width / 3 - 10;
+
+          if (item.type === "video") {
+            return (
+              <View
+                style={{
+                  width: size,
+                  height: size,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                <Video
+                  source={{ uri: item.uri }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                  shouldPlay={false}
+                  isMuted
+                />
+              </View>
+            );
+          }
+
+          return (
+            <Image
+              source={{ uri: item.uri }}
+              style={{
+                width: size,
+                height: size,
                 borderRadius: 8,
               }}
             />

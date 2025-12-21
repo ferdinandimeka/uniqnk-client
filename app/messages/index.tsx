@@ -1,8 +1,10 @@
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChatStore } from "@/store/useChatStore";
+import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
 import { ArrowSquareLeft, Search } from "iconsax-react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -18,23 +20,88 @@ import DecoratedTextField from "../components/DecoratedTextField";
 import IconButton2 from "../components/IconButton2";
 import Section from "../components/Section";
 
-const { width } = Dimensions.get("window");
+// const { width } = Dimensions.get("window");
 
-const chats = [
-    {id: "1", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "2", name: "Nkiru Onuehi", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "3", name: "Chidera Thomas", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "4", name: "Kunle Badmus", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "5", name: "Evans Kuka", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "6", name: "Eghosa Daupreye", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "7", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "8", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "9", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
-    {id: "10", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."}
-]
+// const chats = [
+//     {id: "1", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "2", name: "Nkiru Onuehi", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "3", name: "Chidera Thomas", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "4", name: "Kunle Badmus", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "5", name: "Evans Kuka", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "6", name: "Eghosa Daupreye", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "7", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "8", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "9", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."},
+//     {id: "10", name: "Sarah Damian", message: "Lorem ipsum dolor sit amet consectetur. Viverra diam iaculis nunc pretium elit vitae. Sed commodo."}
+// ]
+type LastMessage = { text?: string };
+    interface Chat {
+        id: string;
+        participants?: string[];
+        lastMessage?: LastMessage[];
+        [key: string]: any;
+    }
+
 
 const Messages = () => {
     const router = useRouter();
+    const { chats, fetchUserChats, messages, fetchMessages } = useChatStore();
+    const { users } = useAuthStore();
+    const { getUserById } = useUserStore();
+    const userId = users?.data.user._id;
+
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        if (!userId) return; // wait until userId exists
+        fetchUserChats(userId);
+    }, [userId]);
+
+    // console.log("userId before effect: ", userId);
+    // console.log("chats before effect: ", chats);
+
+
+   useEffect(() => {
+  // Wait until both are ready
+  if (!userId || !chats?.length) {
+    console.log("Waiting for userId and chats...", { userId, chats });
+    return;
+  }
+
+  const fetchUsers = async () => {
+    try {
+      const participantId = chats[0]?.participants.find((id: string) => id !== userId);
+      console.log("participantId:", participantId);
+      if (!participantId) return;
+      const userData = await getUserById(participantId);
+      console.log("Fetched user:", userData);
+      setUser(userData);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+
+  fetchUsers();
+}, [chats, userId]);
+
+    useEffect(() => {
+        const fetchMessage = async () => {
+            await fetchMessages(chats[0]?.id);
+        }
+        fetchMessage();
+    }, [chats[0]?.id]);
+
+    // console.log("messages: ", messages);
+
+    const chatMessages = messages[chats[0]?.id] || [];
+    // get messages by receiver
+    const chatMessageByReceiver = chatMessages.filter((msg: any) => msg.receiver === userId);
+    // Count unread messages (guard messages as an array before filtering)
+    const unreadCount = (chatMessageByReceiver ?? []).filter((msg: any) => !msg.isRead).length || 0;
+    const jsonChats = JSON.parse(JSON.stringify(chats, null, 2));
+    console.log("jsonChats: ", jsonChats);
+    // console.log("chatMessageByReceiver: ", chatMessageByReceiver);
+
   return (
     <AppScreen noPadding backgroundColor="#fff" style={{ flex: 1 }}>
         <Section
@@ -81,19 +148,53 @@ const Messages = () => {
             </View>
         </Form>
         
-        <ScrollView>
+        {/* <ScrollView>
             <View style={{  paddingHorizontal: 10, paddingTop: 10  }}>
-                {chats.map((chat) => (
+                {(jsonChats as Chat[]).map((chat: Chat) => (
                     <ChatItem
                         key={chat.id}
-                        userAvatar={<AvatarImage />}
-                        userName={chat.name}
-                        chat={chat.message}
-                        chatCount={Math.floor(Math.random() * 10)}
+                        id={chat.id}
+                        senderId={chat.participants?.[1] || ""}
+                        userAvatar={<AvatarImage image={{ uri: user?.profilePicture || "" }} />}
+                        userName={user?.username || "Unknown"}
+                        chat={chat.lastMessage?.[0]?.text || ""}
+                        chatCount={unreadCount}
                     />
                 ))}
             </View>
+        </ScrollView> */}
+        <ScrollView>
+            <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+                {(jsonChats as Chat[]).map((chat: Chat) => {
+                    const chatMessages = messages[chat.id] || [];
+                    // Get the last message sent to the current user
+                    const lastReceivedMessage = chatMessages
+                        .filter((msg: any) => msg.receiver === userId)
+                        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+                    // Count unread messages for this chat
+                    const unreadCount = chatMessages
+                        .filter((msg: any) => msg.receiver === userId && !msg.isRead)
+                        .length;
+
+                    // Get the other participant's ID
+                    const otherParticipantId = chat.participants?.find((id: string) => id !== userId) || "";
+
+                    return (
+                        <ChatItem
+                        key={chat.id}
+                        id={chat.id}
+                        senderId={otherParticipantId}
+                        userAvatar={<AvatarImage image={{ uri: user?.profilePicture || "" }} />}
+                        userName={user?.username || "Unknown"}
+                        chat={lastReceivedMessage?.text || ""}
+                        chatCount={unreadCount}
+                        />
+                    );
+                })}
+            </View>
         </ScrollView>
+
     </AppScreen>
     );
 };

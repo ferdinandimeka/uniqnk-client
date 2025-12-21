@@ -1,16 +1,19 @@
+import { useAuthStore } from "@/store/useAuthStore";
+import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
 import { AddCircle, ArrowSquareLeft } from "iconsax-react-native";
-import React from "react";
+import React, { useState } from "react";
 import {
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Form, { FormInput, FormLabel } from "../../components/AppForm";
 import AppScreen from "../../components/AppScreen";
@@ -21,14 +24,50 @@ import { useOpenModal } from "../../components/ModalContext";
 import ProfileGenderBottomSheet from "../../components/ProfileGenderBottomSheet";
 import ProfileMaritalStatusBottomSheet from "../../components/ProfileMaritalStatusBottomSheet";
 import Section from "../../components/Section";
+// import { updateUserProfile } from "@/app/api/user"; // 🔹 create this API function
 
 const { width } = Dimensions.get("window");
 
 const EditProfile = () => {
   const openModal = useOpenModal();
   const router = useRouter();
-  const goBack = () => {
-    router.back();
+  const goBack = () => router.back();
+
+  const { users } = useAuthStore(); // ✅ from Zustand
+  const user = users?.data?.user
+  // console.log("user from login: ", user)
+  const { updateUserById } = useUserStore(); // ✅ from Zustand
+  console.log("user from userstore: ", user)
+
+  const [ isLoading, setIsLoading ] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: user?.fullName || "",
+    username: user?.username || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    bio: user?.bio || "",
+    gender: user?.gender || "",
+    maritalStatus: user?.marital_status || "",
+  });
+
+  const handleChange = (key: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      await updateUserById(user?._id ?? "", formData)
+      setIsLoading(false);
+      // setUser(updated); // ✅ sync back to Zustand
+      // console.log("updated: ", updated)
+      Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+      // router.back();
+    } catch (err: any) {
+      setIsLoading(false);
+      Alert.alert("Error", err?.message || "Failed to update profile.");
+    }
   };
 
   return (
@@ -36,7 +75,7 @@ const EditProfile = () => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // adjust depending on header height
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
@@ -58,7 +97,11 @@ const EditProfile = () => {
               </TouchableOpacity>
 
               <Text style={styles.headerTitle}>Edit Profile</Text>
-              <View style={{ width: 40 }} />
+
+              {/* Save Button */}
+              <TouchableOpacity onPress={handleSave}>
+                <Text style={{ color: "#384CFF", fontWeight: "bold" }}>{isLoading ? "Saving..." : "Save"}</Text>
+              </TouchableOpacity>
             </View>
           </Section>
 
@@ -93,99 +136,35 @@ const EditProfile = () => {
 
           {/* Form */}
           <Form>
-            <View
-              style={{
-                flexDirection: "column",
-                gap: 15,
-                paddingHorizontal: 10,
-              }}
-            >
-              <View style={styles.form}>
-                <FormLabel
-                  required={false}
-                  label="Name"
-                  labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
-                />
-                <FormInput
-                  as={DecoratedTextField}
-                  name="name"
-                  containerStyle={{ flex: 1 }}
-                  outlined
-                  noMargin
-                  placeholder=""
-                  value="Dennis Ikebuiro"
-                />
-              </View>
+            <View style={{ flexDirection: "column", gap: 15, paddingHorizontal: 10 }}>
+              {[
+                { label: "Name", key: "name" },
+                { label: "Username", key: "username" },
+                { label: "Phone Number", key: "phone" },
+                { label: "Email", key: "email" },
+                { label: "Bio", key: "bio", multiline: true },
+              ].map((field) => (
+                <View key={field.key} style={styles.form}>
+                  <FormLabel
+                    required={false}
+                    label={field.label}
+                    labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
+                  />
+                  <FormInput
+                    as={DecoratedTextField}
+                    name={field.key}
+                    containerStyle={{ flex: 1 }}
+                    outlined
+                    noMargin
+                    placeholder=""
+                    multiline={field.multiline}
+                    value={formData[field.key as keyof typeof formData]}
+                    onChangeText={(text: string) => handleChange(field.key, text)}
+                  />
+                </View>
+              ))}
 
-              <View style={styles.form}>
-                <FormLabel
-                  required={false}
-                  label="Username"
-                  labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
-                />
-                <FormInput
-                  as={DecoratedTextField}
-                  name="username"
-                  containerStyle={{ flex: 1 }}
-                  outlined
-                  noMargin
-                  placeholder=""
-                  value="@DennisDMenace"
-                />
-              </View>
-
-              <View style={styles.form}>
-                <FormLabel
-                  required={false}
-                  label="Phone Number"
-                  labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
-                />
-                <FormInput
-                  as={DecoratedTextField}
-                  name="phone number"
-                  containerStyle={{ flex: 1 }}
-                  outlined
-                  noMargin
-                  placeholder=""
-                  value="+234 817 8984 8989"
-                />
-              </View>
-
-              <View style={styles.form}>
-                <FormLabel
-                  required={false}
-                  label="Email"
-                  labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
-                />
-                <FormInput
-                  as={DecoratedTextField}
-                  name="email"
-                  containerStyle={{ flex: 1 }}
-                  outlined
-                  noMargin
-                  placeholder=""
-                  value="DennisIkebuiro@gmail.com"
-                />
-              </View>
-
-              <View style={styles.form}>
-                <FormLabel
-                  required={false}
-                  label="Bio"
-                  labelStyle={{ fontWeight: "bold", marginLeft: 20 }}
-                />
-                <FormInput
-                  as={DecoratedTextField}
-                  name="bio"
-                  containerStyle={{ flex: 1 }}
-                  multiline={true}
-                  outlined
-                  noMargin
-                  placeholder=""
-                  value="Lorem ipsum dolor sit amet consectetur. Sit at ullamcorper viverra tincidunt nascetur eget."
-                />
-              </View>
-
+              {/* Gender */}
               <View style={styles.form}>
                 <FormLabel
                   required={false}
@@ -199,11 +178,17 @@ const EditProfile = () => {
                   outlined
                   noMargin
                   placeholder=""
-                  value="Male"
-                  onOpenDropdown={() => openModal(ProfileGenderBottomSheet, {})}
+                  value={formData.gender}
+                  onChangeText={(val: string) => handleChange("gender", val)}
+                  onOpenDropdown={() =>
+                    openModal(ProfileGenderBottomSheet, {
+                      onSelect: (val: string) => handleChange("gender", val),
+                    })
+                  }
                 />
               </View>
 
+              {/* Marital Status */}
               <View style={styles.form}>
                 <FormLabel
                   required={false}
@@ -212,14 +197,17 @@ const EditProfile = () => {
                 />
                 <FormInput
                   as={DecoratedTextField}
-                  name="marital status"
+                  name="maritalStatus"
                   containerStyle={{ flex: 1 }}
                   outlined
                   noMargin
                   placeholder=""
-                  value="Single"
+                  value={formData.maritalStatus}
+                  onChangeText={(val: string) => handleChange("maritalStatus", val)}
                   onOpenDropdown={() =>
-                    openModal(ProfileMaritalStatusBottomSheet, {})
+                    openModal(ProfileMaritalStatusBottomSheet, {
+                      onSelect: (val: string) => handleChange("maritalStatus", val),
+                    })
                   }
                 />
               </View>
@@ -237,6 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   headerTitle: {
     fontSize: 18,

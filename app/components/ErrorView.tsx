@@ -1,6 +1,5 @@
 import { useErrorBoundary } from "react-error-boundary";
 import { Text, View } from "react-native";
-import { Colors } from "react-native/Libraries/NewAppScreen";
 import TextStyles from "../../common/theming/text";
 import AppButton from "./AppButton";
 

@@ -8,6 +8,7 @@ import DecoratedTextField from "@/app/components/DecoratedTextField";
 import { smallBlueLogo } from "@/common/assets";
 import { LIGHT_GREY, TEXT_LIGHTER } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from 'expo-router';
 import { Call, Lock, Sms, User } from "iconsax-react-native";
 import { useLayoutEffect } from "react";
@@ -18,9 +19,15 @@ import {
   useAnimatedValue,
   View
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function Register() {
 
+  const {
+      isLoggingIn,
+      error,
+      signup,
+    } = useAuthStore();
   const navigation = useRouter();
   const size = useAnimatedValue(48);
 
@@ -31,6 +38,53 @@ export default function Register() {
         useNativeDriver: false,
         }).start();
     }, [size]);
+
+    const handleSubmit = async (data: {
+      email: string;
+      password: string;
+      phoneNumber: string;
+      fullName: string;
+      username: string;
+      confirmPassword: string;
+    }) => {
+      console.log("Form submitted with", data);
+
+      if (data.password !== data.confirmPassword) {
+        Toast.show({
+          type: "error",
+          text1: "Password mismatch",
+          text2: "Your password and confirm password must match.",
+        });
+        return;
+      }
+
+      await signup(
+        data.email,
+        data.password,
+        data.phoneNumber,
+        data.username,
+        data.fullName
+      );
+
+      // If signup fails, show Toast
+      if (error) {
+        Toast.show({
+          type: "error",
+          text1: "Signup Failed",
+          text2: error,
+        });
+      }
+
+      if (!error) {
+        Toast.show({
+          type: "success",
+          text1: "Signup successful 🎉",
+          text2: "Please login to continue",
+        });
+        navigation.replace("/auth/login");
+      }
+    };
+
   return (
     <AppScreen scrollable style={{ alignItems: "center", paddingTop: 32 }}>
       <Animated.Image
@@ -56,28 +110,26 @@ export default function Register() {
       <Form
         initialValue={{
           fullName: "",
+          username: "",
           email: "",
-          businessName: undefined,
+          phoneNumber: "",
           password: "",
+          confirmPassword: "",
         }}
         onValidate={(data) => {
-          const errors = {};
-          if (!data.email) {
-            errors["email"] = "This field is required";
-          } else if (!data.email.match(/.*@.*\..*/)) {
+          const errors: Record<string, string> = {};
+          if (!data.email) errors["email"] = "This field is required";
+          else if (!/.*@.*\..*/.test(data.email))
             errors["email"] = "Enter a valid email";
-          }
-          if (Object.keys(errors).length) return { errors };
+          if (!data.fullName) errors["fullName"] = "Full names are required";
+          if (!data.username) errors["username"] = "Username is required";
+          if (!data.phoneNumber) errors["phoneNumber"] = "Phone is required";
+          if (!data.password) errors["password"] = "Password is required";
+          if (data.password !== data.confirmPassword)
+            errors["confirmPassword"] = "Passwords do not match";
+          return Object.keys(errors).length > 0 ? { errors } : null;
         }}
-        onSubmit={async (data) => {
-
-            await signup(
-              data.email,
-              data.password,
-              data.fullName,
-              data.businessName ?? undefined
-            );
-        }}
+        onSubmit={handleSubmit}
       >
         <View style={{ width: "100%" }}>
           {(
@@ -94,7 +146,7 @@ export default function Register() {
           {(
             <FormInput
               as={DecoratedTextField}
-              name="userName"
+              name="username"
               autoComplete={"username-new"}
               prefix={<User color={TEXT_LIGHTER} size={20} variant="Bold" />}
               placeholder="User Name"
@@ -132,7 +184,7 @@ export default function Register() {
           />
           {(
             <FormPassword
-              name="confirmPasssword"
+              name="confirmPassword"
               autoComplete="new-password"
               prefix={<User color={LIGHT_GREY} size={20} variant="Bold" />}
               placeholder="Confirm Password"
@@ -159,7 +211,10 @@ export default function Register() {
               Forgot Password
             </AppButton>
           </View>
-          <FormSubmit variant="full" style={[AppStyles.mt, AppStyles.mb]}>Continue</FormSubmit>
+          {/* <FormSubmit variant="full" style={[AppStyles.mt, AppStyles.mb]}>Continue</FormSubmit> */}
+          <FormSubmit variant="full" style={[AppStyles.mt, AppStyles.mb]} loading={isLoggingIn}>
+            {isLoggingIn ? "Signing up..." : "Continue"}
+          </FormSubmit>
           {(
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               <AppText variant="body1Darker">Already have an account? </AppText>

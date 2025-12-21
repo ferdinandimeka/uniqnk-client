@@ -16,7 +16,18 @@
         "foregroundImage": "./assets/image/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.WAKE_LOCK"
+      ],
+      "package": "com.imekaferdy.Uniqnk"
     },
     "web": {
       "bundler": "metro",
@@ -35,11 +46,18 @@
         }
       ],
       "expo-font",
-      "react-native-video",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-build-properties",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "966f5489-6515-402d-87b1-893473d8d1f3"
+      }
     }
   }
 }
