@@ -1,11 +1,14 @@
 // GiftModal.tsx
-import React from "react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useUserStore } from "@/store/useUserStore";
+import React, { useState } from "react";
 import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Form, { FormInput } from "./AppForm";
 import AppText from "./AppText";
@@ -15,11 +18,40 @@ import { ModalArgs, useOpenModal } from "./ModalContext";
 
 interface SheetProps {
     title: string;
+    field: "fullName" | "username" | "phone" | "email";
     placeholder: string;
 }
 
-const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visible, title, placeholder }) => {
+const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visible, title, placeholder, field }) => {
     const openModal = useOpenModal();
+    const { users } = useAuthStore(); // ✅ from Zustand
+    const { updateUserById } = useUserStore();
+    const user = users?.data?.user
+    const [isloading, setIsLoading] = useState(false);
+    const [value, setValue] = useState(
+   user?.[field] ?? ""
+    );
+
+    const handleSave = async () => {
+      if (!value.trim()) {
+        Alert.alert("Validation", "Field cannot be empty");
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        await updateUserById(user._id, {
+          [field]: value,
+        });
+        dismiss();
+        Alert.alert("Success", "Profile updated successfully");
+      } catch (e) {
+        Alert.alert("Error", "Failed to update profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     return (
     <Modal
       animationType="slide"
@@ -35,11 +67,13 @@ const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visi
         <View style={styles.border} />
         <AppText variant="body1" style={styles.title}>{title}</AppText>
 
-        <View style={{ flexDirection: "column", gap: 10, marginTop: 20, marginBottom: 100 }}>
+        <View style={styles.content}>
             <Form>
                 <FormInput
                     as={DecoratedTextField}
-                    name="name"
+                    name={field}
+                    value={value}
+                    onChangeText={setValue}
                     containerStyle={{ flex: 1 }}
                     outlined
                     noMargin
@@ -50,14 +84,23 @@ const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visi
         </View>
         
         <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button2} onPress={() => openModal(({ dismiss, visible }) => (
-                <ConfirmChangeBottomSheet 
-                    title={title} 
-                    dismiss={dismiss} 
-                    visible={visible} 
-                />
-            ), {})}>
-                <AppText variant="body1White">Save</AppText>
+            <TouchableOpacity style={styles.button2} onPress={async () => { 
+              // await handleSave();
+              if (value.trim()) {
+                openModal(({ dismiss, visible }) => (
+                  <ConfirmChangeBottomSheet 
+                      title={title} 
+                      dismiss={dismiss} 
+                      visible={visible}
+                      onConfirm={handleSave}
+                      id={undefined}
+                  />
+                ), {})
+              }
+            }}>
+                <AppText variant="body1White">
+                  {isloading ? "Saving..." : "Save Changes"}
+                </AppText>
             </TouchableOpacity>
         </View>
       </View>
@@ -139,6 +182,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     color: "#333",
     backgroundColor: "#F1F4FF",
+  },
+  content: {
+    flex: 1,
+    marginTop: 20,
+    paddingBottom: 80, // space for fixed button
   },
   button2: {
     flex: 1,

@@ -1,14 +1,16 @@
 // GiftModal.tsx
 import { FormPassword } from "@/app/components/AppFormComponents";
 import { TEXT_LIGHTER } from "@/common/theming/colors";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Lock } from "iconsax-react-native";
-import React from "react";
+import React, { useState } from "react";
 import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Form from "./AppForm";
 import AppText from "./AppText";
@@ -16,10 +18,45 @@ import { ModalArgs } from "./ModalContext";
 
 interface SheetProps {
     title: string;
+    onConfirm: () => void;
 }
 
-const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visible, title }) => {
-    return (
+const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visible, title, onConfirm }) => {
+    
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { users, verifyPassword } = useAuthStore();
+  const email = users?.data?.user?.email
+
+  const handleConfirm = async () => {
+
+    if (!password) {
+      Alert.alert("Password required", "Please enter your password to confirm.");
+      return
+    }
+
+    try {
+      setLoading(true);
+      console.log("Email: ", email, "Password: ", password)
+      const isValid = await verifyPassword(email, password);
+      console.log("Password valid: ", isValid)
+
+      if (!isValid) {
+        Alert.alert("Incorrect password", "The password you entered is wrong.");
+        return; // 🚫 STOP HERE
+      }
+
+      onConfirm();
+      dismiss();
+    } catch (error) {
+      Alert.alert("InCorrect Password", error as string);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
     <Modal
       animationType="slide"
       transparent
@@ -34,10 +71,12 @@ const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visi
         <View style={styles.border} />
         <AppText variant="body1" style={styles.title}>{title}</AppText>
 
-        <View style={{ flexDirection: "column", marginTop: 20, marginBottom: 100 }}>
+        <View style={styles.content}>
             <Form>
                 <FormPassword
                     name="password"
+                    value={password}
+                    onChangeText={setPassword}
                     placeholder="Password"
                     outlined
                     autoComplete={"password"}
@@ -48,11 +87,8 @@ const ChangeNameBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visi
         </View>
         
         <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button2} onPress={() => {
-                // Handle confirm action
-                dismiss();
-            }}>
-                <AppText variant="body1White">Confirm change</AppText>
+            <TouchableOpacity style={styles.button2} onPress={handleConfirm}>
+                <AppText variant="body1White">{loading ? "Checking..." :"Confirm change"}</AppText>
             </TouchableOpacity>
         </View>
       </View>
@@ -125,6 +161,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     width: "100%",
   },
+  content: {
+    flex: 1,
+    marginTop: 10,
+    paddingBottom: 70, // space for fixed button
+  },
   button: {
     flex: 1,
     paddingVertical: 12,
@@ -138,7 +179,7 @@ const styles = StyleSheet.create({
   button2: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",

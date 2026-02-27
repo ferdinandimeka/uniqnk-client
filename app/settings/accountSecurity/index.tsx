@@ -1,6 +1,7 @@
 // import * as ImagePicker from "expo-image-picker";
 import AuthBottomSheet from "@/app/components/AuthBottomSheet";
 import ChangePasswordBottomSheet from "@/app/components/ChangePasswordBottomSheet";
+import SecurityQuestionBottomSheet from "@/app/components/SecurityQuestionBottomSheet";
 import { useRouter } from "expo-router";
 import { ArrowRight2, ArrowSquareLeft } from "iconsax-react-native";
 import React, { useState } from "react";
@@ -17,6 +18,8 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useAuthStore } from "../../../store/useAuthStore";
+import { useSettingsStore } from "../../../store/useSettingsStore";
 import AppScreen from "../../components/AppScreen";
 import { useOpenModal } from "../../components/ModalContext";
 import Section from "../../components/Section";
@@ -26,10 +29,38 @@ const { width } = Dimensions.get("window");
 const AccountSetting = () => {
   const openModal = useOpenModal();
   const router = useRouter();
-  const [isTemporarilyDisabled, setIsTemporarilyDisabled] = useState(false);
+  const [isBiometricLogin, setIsBiometricLogin] = useState(false);
+  const [isBiometricAuth, setIsBiometricAuth] = useState(false);
   const goBack = () => {
     router.back();
   };
+
+  const { updateAuth } = useSettingsStore();
+  const { users } = useAuthStore();
+  const userId = users?.data?.user._id
+  // console.log("userId in account security: ", userId)
+
+  const onToggleBiometricLogin = async (value: boolean) => {
+    setIsBiometricLogin(value);
+    try {
+      await updateAuth(userId, { biometricEnabled: value });
+    } catch (error) {
+      // rollback on failure
+      setIsBiometricLogin(prev => !prev);
+      console.log("Failed to update biometric login:", error);
+    }
+  }
+
+  const onToggleBiometricAuth = async (value: boolean) => {
+    setIsBiometricAuth(value);
+    try {
+      await updateAuth(userId, { pinEnabled: value });
+    } catch (error) {
+      // rollback on failure
+      setIsBiometricAuth(prev => !prev);
+      console.log("Failed to update biometric auth:", error);
+    }
+  }
 
   return (
     <AppScreen noPadding backgroundColor="#fff" style={{ flex: 1 }}>
@@ -69,6 +100,7 @@ const AccountSetting = () => {
                     title={"Change Password"}
                     dismiss={dismiss} 
                     visible={visible} 
+                    id={undefined}
                 />
             ), {})}>
                 <View style={styles.content}>
@@ -88,7 +120,8 @@ const AccountSetting = () => {
                     Pin
                     // title="Enter Current Pin"
                     dismiss={dismiss} 
-                    visible={visible} 
+                    visible={visible}
+                    id={undefined}
                 />
             ), {})}>
                 <View style={styles.content} >
@@ -104,11 +137,11 @@ const AccountSetting = () => {
             </TouchableOpacity>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View style={styles.content} >
+                <View style={styles.content} >setIsTemporarilyDisabled
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "grey" }}>Biometric Login</Text>
                     <Text style={{ color: "gray" }}>Enable/Disable</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch value={isBiometricLogin} onValueChange={onToggleBiometricLogin} />
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -116,10 +149,19 @@ const AccountSetting = () => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "grey" }}>PIN + Biometric Authentication</Text>
                     <Text style={{ color: "gray" }}>Phone Number</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch value={isBiometricAuth} onValueChange={onToggleBiometricAuth} />
             </View>
 
-            <TouchableOpacity style={styles.contents}>
+            <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
+                <SecurityQuestionBottomSheet
+                    title="Security Question"
+                    dismiss={dismiss}
+                    visible={visible}
+                    // select
+                    // answer
+                    id={undefined}
+                />
+            ), {})}>
                 <View style={styles.content} >
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Security Question</Text>
                     <Text style={{ color: "gray" }}>Change security question</Text>
@@ -136,13 +178,13 @@ const AccountSetting = () => {
                 <AuthBottomSheet
                     auth_method
                     title="Choose Authentication Method"
-                    dismiss={dismiss} 
-                    visible={visible} 
+                    dismiss={dismiss}
+                    visible={visible}
+                    id={undefined}
                 />
             ), {})}>
                 <View style={styles.content} >
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "gray" }}>Two-factor authentication</Text>
-                    {/* <Text style={{ color: "gray" }}>Deactive your Uniqnk Account</Text> */}
                 </View>
 
                 <ArrowRight2

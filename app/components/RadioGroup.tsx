@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export type Option = { header: string; label: string; value: string };
+export type Option = { header: string; label: string; value: string; id: string };
 
 interface RadioGroupProps {
   options: Option[];

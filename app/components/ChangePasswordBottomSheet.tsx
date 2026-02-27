@@ -1,9 +1,12 @@
 // GiftModal.tsx
 import { FormPassword } from "@/app/components/AppFormComponents";
 import { TEXT_LIGHTER } from "@/common/theming/colors";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useUserStore } from "@/store/useUserStore";
 import { Lock } from "iconsax-react-native";
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -15,6 +18,7 @@ import AppText from "./AppText";
 import BiometricPinAuth from "./BiometricPinAuth";
 import { ModalArgs } from "./ModalContext";
 
+
 interface SheetProps {
     title?: string;
     // changePassword?: string;
@@ -23,7 +27,49 @@ interface SheetProps {
 }
 
 const ChangePasswordBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, visible, Password, Pin, title }) => {
-    return (
+  const { changePassword } = useUserStore();
+    const { users } = useAuthStore(); // ✅ from Zustand
+    const user = users?.data?.user
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  const [ isLoading, setIsLoading ] = useState(false);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      Alert.alert("Error", "Please fill in all password fields.");
+      setIsLoading(false);
+      return;
+    }
+
+    // validate new password and confirm password match
+    if (newPassword !== confirmNewPassword) {
+      Alert.alert("Error", "New password and confirm password do not match.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const result = await changePassword(user?._id ?? "", currentPassword, newPassword);
+      setIsLoading(false);
+      // setUser(updated); // ✅ sync back to Zustand
+      console.log("result: ", result)
+      if (!result) {
+        Alert.alert("Error", "Current password is incorrect.");
+      } else {
+        Alert.alert("Password Updated", "Your password has been successfully updated.");
+      }
+        // router.back();
+    } catch (err: any) {
+      setIsLoading(false);
+      Alert.alert("Error", err?.message || "Failed to update profile.");
+    }
+  };
+  
+  return (
     <Modal
       animationType="slide"
       transparent
@@ -40,40 +86,40 @@ const ChangePasswordBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, 
 
         {Password && (
             <View style={{ paddingHorizontal: 20 }}>
-                <View style={{ flexDirection: "column", marginTop: 20, marginBottom: 100 }}>
+                <View style={{ flexDirection: "column", marginTop: 20, marginBottom: 50 }}>
                     <Form>
                         <FormPassword
-                            name="password"
+                            name="currentPassword"
                             placeholder="Current password"
                             outlined
                             autoComplete={"password"}
+                            onChangeText={setCurrentPassword}
                             prefix={<Lock color={TEXT_LIGHTER} size={20} variant="Bold" />}
                         />
 
                         <FormPassword
-                            name="password"
+                            name="newPassword"
                             placeholder="New password"
                             outlined
                             autoComplete={"password"}
+                            onChangeText={setNewPassword}
                             prefix={<Lock color={TEXT_LIGHTER} size={20} variant="Bold" />}
                         />
 
                         <FormPassword
-                            name="password"
+                            name="confirmPassword"
                             placeholder="Confirm new password"
                             outlined
                             autoComplete={"password"}
+                            onChangeText={setConfirmNewPassword}
                             prefix={<Lock color={TEXT_LIGHTER} size={20} variant="Bold" />}
                         />
                     </Form>
                 </View>
                 
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button2} onPress={() => {
-                        // Handle confirm action
-                        dismiss();
-                    }}>
-                        <AppText variant="body1White">Save</AppText>
+                    <TouchableOpacity style={styles.button2} onPress={handleSave}>
+                        <AppText variant="body1White">{isLoading ? "Saving..." : "Save"}</AppText>
                     </TouchableOpacity>
                 </View>
             </View>)}
@@ -84,7 +130,7 @@ const ChangePasswordBottomSheet: React.FC<ModalArgs & SheetProps> = ({ dismiss, 
                       <BiometricPinAuth
                         // mode="enroll"
                         onSuccess={() => {
-                          
+                          dismiss()
                         }}
                       />
                     </View>
@@ -111,7 +157,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    maxHeight: "65%",
+    maxHeight: "90%",
   },
   border: {
     borderTopWidth: 5,

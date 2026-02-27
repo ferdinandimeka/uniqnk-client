@@ -37,7 +37,7 @@ const EditProfile = () => {
   const user = users?.data?.user
   // console.log("user from login: ", user)
   const { updateUserById } = useUserStore(); // ✅ from Zustand
-  console.log("user from userstore: ", user)
+  // console.log("user from userstore: ", user)
 
   const [ isLoading, setIsLoading ] = useState(false);
 

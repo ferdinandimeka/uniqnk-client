@@ -50,7 +50,7 @@ const Messages = () => {
     const { getUserById } = useUserStore();
     const userId = users?.data.user._id;
 
-    const [user, setUser] = useState<any>(null);
+    const [usersMap, setUsersMap] = useState<Record<string, any>>({});
 
     useEffect(() => {
         if (!userId) return; // wait until userId exists
@@ -62,27 +62,30 @@ const Messages = () => {
 
 
    useEffect(() => {
-  // Wait until both are ready
-  if (!userId || !chats?.length) {
-    console.log("Waiting for userId and chats...", { userId, chats });
-    return;
-  }
+  if (!userId || !chats?.length) return;
 
   const fetchUsers = async () => {
-    try {
-      const participantId = chats[0]?.participants.find((id: string) => id !== userId);
-      console.log("participantId:", participantId);
-      if (!participantId) return;
-      const userData = await getUserById(participantId);
-      console.log("Fetched user:", userData);
-      setUser(userData);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    }
+    const newUsers: Record<string, any> = {};
+
+    await Promise.all(
+      chats.map(async (chat) => {
+        const otherId = chat.participants?.find(
+          (id: string) => id !== userId
+        );
+
+        if (otherId && !usersMap[otherId]) {
+          const userData = await getUserById(otherId);
+          newUsers[otherId] = userData;
+        }
+      })
+    );
+
+    setUsersMap((prev) => ({ ...prev, ...newUsers }));
   };
 
   fetchUsers();
 }, [chats, userId]);
+
 
     useEffect(() => {
         const fetchMessage = async () => {
@@ -166,27 +169,34 @@ const Messages = () => {
         <ScrollView>
             <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
                 {(jsonChats as Chat[]).map((chat: Chat) => {
+                    const otherParticipantId =
+                        chat.participants?.find((id: string) => id !== userId) || "";
+
                     const chatMessages = messages[chat.id] || [];
-                    // Get the last message sent to the current user
+
                     const lastReceivedMessage = chatMessages
                         .filter((msg: any) => msg.receiver === userId)
-                        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                        .sort(
+                        (a: any, b: any) =>
+                            new Date(b.createdAt).getTime() -
+                            new Date(a.createdAt).getTime()
+                        )[0];
 
-                    // Count unread messages for this chat
-                    const unreadCount = chatMessages
-                        .filter((msg: any) => msg.receiver === userId && !msg.isRead)
-                        .length;
+                    const unreadCount = chatMessages.filter(
+                        (msg: any) => msg.receiver === userId && !msg.isRead
+                    ).length;
 
-                    // Get the other participant's ID
-                    const otherParticipantId = chat.participants?.find((id: string) => id !== userId) || "";
+                    const chatUser = usersMap[otherParticipantId];
 
                     return (
                         <ChatItem
                         key={chat.id}
                         id={chat.id}
                         senderId={otherParticipantId}
-                        userAvatar={<AvatarImage image={{ uri: user?.profilePicture || "" }} />}
-                        userName={user?.username || "Unknown"}
+                        userAvatar={
+                            <AvatarImage image={{ uri: chatUser?.profilePicture || "" }} />
+                        }
+                        userName={chatUser?.username || "Unknown"}
                         chat={lastReceivedMessage?.text || ""}
                         chatCount={unreadCount}
                         />

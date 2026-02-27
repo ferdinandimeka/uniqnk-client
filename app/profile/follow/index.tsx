@@ -11,6 +11,8 @@ import {
 } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
 // import useFlatListAPI from "@/common/utils/use_flatlist_api";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChatStore } from "@/store/useChatStore";
 import { usePostStore } from "@/store/usePostStore";
 import { useUserStore } from "@/store/useUserStore";
 import { Video } from "expo-av";
@@ -36,11 +38,13 @@ import { useOpenModal } from "../../components/ModalContext";
 const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(_, ref) {
   const { getUserById } = useUserStore(); // ✅ get user from Zustand store
   const { posts } = usePostStore()
+  const { chats, fetchUserChats } = useChatStore();
+  const { users } = useAuthStore();
   // console.log("posts: ", posts)
 
   const [user, setUser] = React.useState({})
   const { isFollowing, notFollowing, id } = useLocalSearchParams();
-  console.log("id: ", id)
+  // console.log("id: ", id)
   // console.log("id: ", id)
 
   // find total number of posts by user
@@ -55,6 +59,15 @@ const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(
     }
     fetchUser()
   }, [])
+
+  React.useEffect(() => {
+    const fetchChats = async () => {
+      if (users?.data.user._id) {
+        await fetchUserChats(users?.data.user._id);
+      }
+    }
+    fetchChats();
+  }, []);
 
   //get number of followers
   const numOfFollowers = user?.followers?.length
@@ -74,7 +87,37 @@ const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(
     }
   };
 
-  // const users = users?.data?.user;
+  const handleMessagePress = () => {
+    const currentUserId = users?.data.user._id;
+    const profileUserId = id as string;
+    console.log("currentUserId: ", currentUserId)
+    console.log("profileUserId: ", profileUserId)
+
+    if (!currentUserId || !profileUserId) return;
+
+    // Check if a chat already exists between the two users
+    const existingChat = chats?.find(chat =>
+      chat.participants.includes(currentUserId) &&
+      chat.participants.includes(profileUserId)
+    );
+
+    // console.log("existingChat: ", existingChat)
+    // console.log("Chat: ",chats)
+
+    if (existingChat) {
+      // Navigate to the existing chat
+      router.push("/messages");
+    } else {
+      router.push({
+        pathname: "/messages/chat",
+        params: {
+          chatId: "",
+          username: user?.username || "",
+          senderId: profileUserId
+        }
+      });
+    }
+  }
 
   return (
     <View
@@ -159,7 +202,7 @@ const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(
             padding: 12,
             borderRadius: 16,
           }}
-          onPress={() => router.push("/messages")}
+          onPress={handleMessagePress}
         >
           Message
         </AppButton>

@@ -26,16 +26,19 @@ const AuthBottomSheet: React.FC<ModalArgs & SheetProps> = ({
 
   const authOptions: Option[] = [
     {
+      id: "authenticator_app",
       header: "Authenticator App",
       label: "Use an authenticator app to generate login codes",
       value: "authenticator_app",
     },
     {
+      id: "sms",
       header: "SMS",
       label: "Receive login codes via SMS to your phone number",
       value: "sms",
     },
     {
+      id: "email",
       header: "Email",
       label: "Receive login codes via email to your registered email address",
       value: "email",
@@ -73,6 +76,7 @@ const AuthBottomSheet: React.FC<ModalArgs & SheetProps> = ({
                     title="Enter Confirmation Code"
                     dismiss={dismiss} 
                     visible={visible} 
+                    id={undefined}
                 />
             ), {})}>
               <AppText variant="body1" style={styles.nextButtonText}>
@@ -96,7 +100,7 @@ const AuthBottomSheet: React.FC<ModalArgs & SheetProps> = ({
                 />
 
                 <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                    <Text style={{ alignSelf: "center" }}>Didn't get code? </Text>
+                    <Text style={{ alignSelf: "center" }}>Didn&apos;t get code? </Text>
                     <Text style={{ alignSelf: "center", color: "#384CFF" }}> Resend code. 28s </Text>
                 </View>
 

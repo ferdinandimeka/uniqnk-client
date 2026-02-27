@@ -14,6 +14,7 @@ import {
 } from "iconsax-react-native";
 import React from "react";
 import {
+  Alert,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
@@ -22,8 +23,9 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { useAuthStore } from "../../store/useAuthStore";
 import ActivityModal from "../components/ActivityModal";
 import AppScreen from "../components/AppScreen";
 import { useOpenModal } from "../components/ModalContext";
@@ -34,9 +36,28 @@ const { width } = Dimensions.get("window");
 
 const Settings = () => {
   const openModal = useOpenModal();
+  const { logout } = useAuthStore();
   const router = useRouter();
   const goBack = () => {
     router.back();
+  };
+
+  // confirm logout
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          onPress: () => logout()
+        }
+      ]
+    );
   };
 
   return (
@@ -254,7 +275,7 @@ const Settings = () => {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.contents}>
+              <TouchableOpacity style={styles.contents} onPress={handleLogout}>
                 <View style={styles.content}>
                   <Logout
                     size="16"

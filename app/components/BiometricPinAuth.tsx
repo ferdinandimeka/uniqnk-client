@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/store/useAuthStore";
+import { useUserStore } from "@/store/useUserStore";
 import * as Crypto from "expo-crypto";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
@@ -132,6 +134,11 @@ export default function BiometricPinAuth({
   onSuccess: () => void;
   showDevButtons?: boolean;
 }) {
+  const { setTransactionPin } = useUserStore();
+  const { users } = useAuthStore();
+  const userId = users?.data?.user._id;
+  console.log("userId in BiometricPinAuth: ", userId);
+
   const [pin, setPin] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
@@ -199,6 +206,14 @@ export default function BiometricPinAuth({
     const hash = await hashPin(pinToSave, salt);
     await saveSecure(STORAGE_KEYS.PIN_HASH, hash);
     await saveSecure(STORAGE_KEYS.PIN_SALT, salt);
+    // set transaction pin api
+    try{
+      await setTransactionPin(userId as string, pinToSave); // replace with actual user ID
+      Alert.alert("Success", "Transaction PIN set successfully.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      Alert.alert("Error", "Failed to set Transaction PIN: " + errorMessage);
+    }
     setIsEnrolled(true);
   }
 

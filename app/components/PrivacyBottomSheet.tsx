@@ -1,6 +1,7 @@
 // GiftModal.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -9,13 +10,59 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
+import { useUserStore } from "../../store/useUserStore";
 import AppText from "./AppText";
-import { ModalArgs, useOpenModal } from "./ModalContext";
-
+import { ModalArgs } from "./ModalContext";
 
 const ChangeNameBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => {
-    const openModal = useOpenModal();
-    const [isTemporarilyDisabled, setIsTemporarilyDisabled] = useState(false);
+    // const openModal = useOpenModal();
+    const { updatePrivacy } = useSettingsStore();
+    const { users } = useAuthStore();
+    const { getUserById } = useUserStore();
+    const userId = users?.data?.user._id
+    const isPrivateAccount = users?.data?.user.settings?.privacy.isPrivateAccount;
+    // console.log("userId in privacy bottom sheet: ", users?.data?.user.settings?.privacy);
+    const [isTemporarilyDisabled, setIsTemporarilyDisabled] = useState(isPrivateAccount);
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+
+    useEffect(() => {
+      if (userId) {
+        const fetchUser = async () => {
+          try {
+            const userData = await getUserById(userId);
+            // console.log("Fetched user data in privacy bottom sheet: ", userData.settings?.privacy);
+            setIsTemporarilyDisabled(userData?.settings?.privacy?.isPrivateAccount || false);
+          } catch (error) {
+            console.log("Failed to fetch user data:", error);
+          }
+        };
+        fetchUser();
+      }
+    }, [userId, getUserById]);
+
+    // set privacy 
+    const onTogglePrivacy = (value: boolean) => {
+      setIsTemporarilyDisabled(value);
+    } 
+
+    // set privacy setting in database when toggled
+    const onSave = async () => {
+      setIsLoading(true)
+      try {
+        await updatePrivacy(userId, isTemporarilyDisabled);
+        setIsLoading(false)
+        dismiss();
+        Alert.alert("Success", "Your privacy settings have been updated.");
+      } catch (error) {
+        console.log("Failed to update privacy setting:", error);
+      }
+    }
+
+    // console.log("isTemporarilyDisabled: ", isTemporarilyDisabled)
+    // console.log("isPrivateAccount: ", isPrivateAccount)
+
     return (
     <Modal
       animationType="slide"
@@ -37,13 +84,13 @@ const ChangeNameBottomSheet: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Private account</Text>
                     <Text style={{ color: "gray" }}>Make what you share only visible to your followers and people you permit</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch value={isTemporarilyDisabled} onValueChange={onTogglePrivacy} />
             </View>
         </View>
         
         <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button2} onPress={dismiss}>
-                <AppText variant="body1White">Save</AppText>
+            <TouchableOpacity style={styles.button2} onPress={onSave}>
+                <AppText variant="body1White">{isLoading ? "Saving..." : "Save"}</AppText>
             </TouchableOpacity>
         </View>
       </View>

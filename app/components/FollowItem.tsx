@@ -194,8 +194,8 @@ export const FollowItem: React.FC<FollowItemProps> = ({
   const handleFollow = () => {
     if (isFollowing) {
       router.push({ pathname: "/profile/follow", params: { isFollowing: "true", id: userId } });
-    } else if (notFollowing) {
-      router.push({ pathname: "/profile/follow", params: { notFollowing: "true" } });
+    } else {
+      router.push({ pathname: "/profile/follow", params: { notFollowing: "true", id: userId } });
     }
     dismiss?.();
   };

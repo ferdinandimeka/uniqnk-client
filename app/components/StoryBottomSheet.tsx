@@ -154,7 +154,7 @@ export default function StoryViewerModal({
         <View
           style={{
             position: "absolute",
-            top: 40,
+            top: height * 0.08,
             left: 20,
             right: 20,
             flexDirection: "row",
@@ -192,7 +192,7 @@ export default function StoryViewerModal({
         <View
           style={{
             position: "absolute",
-            top: 20,
+            top: height * 0.05,
             left: 0,
             right: 0,
             flexDirection: "row",

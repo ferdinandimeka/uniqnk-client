@@ -1,6 +1,6 @@
-import { useRouter } from "expo-router";
+// import { useRouter } from "expo-router";
 import { ArrowSquareLeft } from "iconsax-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
     Animated,
     Dimensions,
@@ -12,17 +12,35 @@ import {
     View
 } from "react-native";
 import AppScreen from "./AppScreen";
-import { ModalArgs, useOpenModal } from "./ModalContext";
+import { ModalArgs } from "./ModalContext";
 import Section from "./Section";
 
 const { width } = Dimensions.get("window");
 
-const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
-  const slideAnim = useRef(new Animated.Value(width)).current; // Start offscreen (right)
-    const openModal = useOpenModal();
+export type EmailNotificationSettings = {
+  feedbackEmails: boolean;
+  reminderEmails: boolean;
+  promotionalEmails: boolean;
+  productEmails: boolean;
+  supportEmails: boolean;
+};
 
-    const router = useRouter();
-    const [isTemporarilyDisabled, setIsTemporarilyDisabled] = useState(false);
+interface EmailNotificationProps extends ModalArgs {
+  emailSettings: EmailNotificationSettings;
+  onChange: (key: keyof EmailNotificationSettings, value: boolean) => void;
+}
+
+const EmailNotification: React.FC<EmailNotificationProps> = ({
+  dismiss,
+  visible,
+  emailSettings,
+  onChange,
+}) => {
+
+  const slideAnim = useRef(new Animated.Value(width)).current; // Start offscreen (right)
+    // const openModal = useOpenModal();
+
+    // const router = useRouter();
    
     useEffect(() => {
         if (visible) {
@@ -41,6 +59,27 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
         }).start();
         }
     }, [visible, slideAnim]);
+
+    const [localSettings, setLocalSettings] =
+        React.useState<EmailNotificationSettings>(emailSettings);
+    // const wasVisible = useRef(visible);
+
+    // Sync ONLY when modal opens
+    useEffect(() => {
+        if (visible) {
+            setLocalSettings(emailSettings);
+        }
+        // wasVisible.current = visible;
+    }, [visible]);
+
+    const handleToggle = (key: keyof EmailNotificationSettings, value: boolean) => {
+        setLocalSettings(prev => ({
+        ...prev,
+        [key]: value,
+        }));
+
+        onChange(key, value);
+    };
 
   return (
     <Animated.View
@@ -78,7 +117,10 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Feedback emails</Text>
                     <Text style={{ color: "gray" }}>In-app feedback given</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch
+                    value={localSettings.feedbackEmails}
+                    onValueChange={(v) => handleToggle("feedbackEmails", v)}
+                />
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -86,7 +128,10 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Reminder emails</Text>
                     <Text style={{ color: "gray" }}>Receive notification reminders</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch
+                    value={localSettings.reminderEmails}
+                    onValueChange={(v) => handleToggle("reminderEmails", v)}
+                />
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -94,7 +139,10 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Promotional Emails</Text>
                     <Text style={{ color: "gray" }}>Get latest info on limited offers and services</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch
+                    value={localSettings.promotionalEmails}
+                    onValueChange={(v) => handleToggle("promotionalEmails", v)}
+                />
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -102,7 +150,10 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Product Emails</Text>
                     <Text style={{ color: "gray" }}>Get Info on latest updates and features</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch
+                    value={localSettings.productEmails}
+                    onValueChange={(v) => handleToggle("productEmails", v)}
+                />
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -110,7 +161,10 @@ const EmailNotification: React.FC<ModalArgs> = ({ dismiss, visible }) => {
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "#555555" }}>Support Emails</Text>
                     <Text style={{ color: "gray" }}>Get Info on terms of use and guidelines</Text>
                 </View>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch
+                    value={localSettings.supportEmails}
+                    onValueChange={(v) => handleToggle("supportEmails", v)}
+                />
             </View>
         </View>
 

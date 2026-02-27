@@ -1,9 +1,13 @@
+/* eslint-disable no-unused-expressions */
 // import * as ImagePicker from "expo-image-picker";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { useUserStore } from "@/store/useUserStore";
 import { useRouter } from "expo-router";
 import { ArrowRight2, ArrowSquareLeft } from "iconsax-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  // Alert,
+  Alert,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +26,7 @@ import ConfirmChangeBottomSheet from "../../components/ConfirmChangeBottomSheet"
 import { useOpenModal } from "../../components/ModalContext";
 import Section from "../../components/Section";
 
+
 const { width } = Dimensions.get("window");
 
 const AccountSetting = () => {
@@ -31,6 +36,110 @@ const AccountSetting = () => {
   const goBack = () => {
     router.back();
   };
+
+  const { getUserById } = useUserStore();
+  const { users } = useAuthStore(); // ✅ get user from Zustand store
+  const userId = users?.data?.user._id
+  const { disableAccount, enableAccount, restrictAccount, deactivateAccount } = useSettingsStore(); // ✅ get disableAccount function from Zustand store
+  
+  const picture = users?.data?.user.profilePicture;
+  const username = users?.data?.user.username
+  const fullName = users?.data?.user.fullName
+
+  const [loading, setLoading] = useState(false);
+  const [isRestricting, setIsRestricting] = useState(false);
+  const [pendingValue, setPendingValue] = useState<boolean | null>(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
+  const onRestrictHandler = async () => {
+    setIsRestricting(true);
+
+    try {
+      await restrictAccount(userId, "User requested account restriction");
+      setIsRestricting(false);
+      Alert.alert("Account Restricted", "Your account has been restricted. Please contact support for more information.");
+    } catch (e) {
+      Alert.alert("Error", e as string)
+    } finally {
+      setIsRestricting(false);
+    }
+  };
+
+  const onDeactivateHandler = async () => {
+    try {
+      await deactivateAccount(userId, "User requested account deactivation");
+      Alert.alert("Account Deactivated", "Your account has been deactivated. You can re-enable it anytime by logging in.");
+    } catch (error) {
+      Alert.alert("Error", error as string);
+    }
+  }
+
+  const onToggleDisableAccount = (value: boolean) => {
+    if (loading) return;
+
+    setPendingValue(value);   // store intent
+    setConfirmVisible(true);  // open confirm modal
+  };
+
+  const confirmToggle = async () => {
+    if (pendingValue === null) return;
+
+    setConfirmVisible(false);
+    setLoading(true);
+
+    // optimistic UI
+    setIsTemporarilyDisabled(pendingValue);
+
+    try {
+      pendingValue
+        ? await disableAccount(userId, "User requested account disable")
+        : await enableAccount(userId);
+    } catch (e) {
+      // rollback on failure
+      setIsTemporarilyDisabled(!pendingValue);
+      console.log("Toggle failed:", e);
+    } finally {
+      setLoading(false);
+      setPendingValue(null);
+    }
+  };
+
+  const cancelToggle = () => {
+    setConfirmVisible(false);
+    setPendingValue(null);
+  };
+
+  useEffect(() => {
+    if (!confirmVisible || pendingValue === null) return;
+
+    Alert.alert(
+      pendingValue ? "Disable account?" : "Enable account?",
+      pendingValue
+        ? "Your account will be temporarily disabled. You can re-enable it anytime."
+        : "Your account will be re-enabled.",
+      [
+        { text: "Cancel", style: "cancel", onPress: cancelToggle },
+        { text: "Confirm", onPress: confirmToggle }
+      ]
+    );
+  }, [confirmVisible]);
+
+  useEffect(() => {
+    if (userId) {
+      const fetchUser = async () => {
+        try {
+          const userData = await getUserById(userId)
+          console.log("Fetched user data in privacy bottom sheet: ", userData.settings?.accountStatus);
+          setIsTemporarilyDisabled(userData?.settings?.accountStatus?.isDisabled || false);
+        } catch (error) {
+          console.log("Failed to fetch user data:", error);
+        }
+      };
+      fetchUser();
+    }
+  }, [userId, getUserById]);
+
+  console.log("pending value: ", pendingValue)
 
   return (
     <AppScreen noPadding backgroundColor="#fff" style={{ flex: 1 }}>
@@ -79,23 +188,29 @@ const AccountSetting = () => {
                 alignItems: "center",
               }}
             >
-              <AvatarImage bordered size={40} />
-              <AppText variant="body1">Dennis Ikebuiro</AppText>
-              <AppText variant="body1">@DennisK</AppText>
+              <AvatarImage  bordered size={40} image={picture} />
+              <AppText variant="body1">{fullName}</AppText>
+              <AppText variant="body1">@{username}</AppText>
             </TouchableOpacity>
           </View>
 
           <View style={styles.settingsContent}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, paddingHorizontal: 6 }}>
                 <Text style={{ fontWeight: "bold", fontSize: 15 }}>Temporarily disable account</Text>
-                <Switch value={isTemporarilyDisabled} onValueChange={setIsTemporarilyDisabled} />
+                <Switch 
+                  value={isTemporarilyDisabled} 
+                  onValueChange={onToggleDisableAccount} 
+                  disabled={loading}
+                />
             </View>
             
             <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
                 <ConfirmChangeBottomSheet
                     title="Restrict Account" 
                     dismiss={dismiss} 
-                    visible={visible} 
+                    visible={visible}
+                    id={undefined}
+                    onConfirm={onRestrictHandler}
                 />
             ), {})}>
                 <View style={styles.content}>
@@ -110,7 +225,15 @@ const AccountSetting = () => {
                 />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.contents}>
+            <TouchableOpacity style={styles.contents} onPress={() => openModal(({ dismiss, visible }) => (
+                <ConfirmChangeBottomSheet
+                    title="Deactivate Account" 
+                    dismiss={dismiss} 
+                    visible={visible}
+                    id={undefined}
+                    onConfirm={onDeactivateHandler}
+                />
+            ), {})}>
                 <View style={styles.content} >
                     <Text style={{ fontWeight: "bold", fontSize: 16, color: "red" }}>Close Account</Text>
                     <Text style={{ color: "gray" }}>Deactive your Uniqnk Account</Text>

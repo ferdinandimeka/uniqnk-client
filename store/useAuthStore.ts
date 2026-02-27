@@ -37,6 +37,7 @@ interface AuthState {
   error: string | null;
   signup: (email: string, password: string, phone: string, username: string, fullName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  verifyPassword: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
 }
@@ -70,6 +71,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       let data;
       try {
         data = await res.json();
+        console.log("📦 Login response data:", data);
       } catch (err) {
         console.error("❌ Failed to parse JSON:", err);
         set({ error: "Server error", isLoggingIn: false });
@@ -137,6 +139,45 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (err) {
       console.error("🌐 Network error:", err);
       set({ error: "Network error", isLoggingIn: false });
+    }
+  },
+  verifyPassword: async (email, password) => {
+    try {
+      console.log("🚀 Starting password verification fetch with", { email, password });
+
+      // Android Emulator
+      const API_URL = "https://uniqnk.onrender.com/api/v1/auth/verify-password/";
+
+      // or for physical device
+      // const API_URL = "http://192.168.1.45:4000/api/v1/auth/verify-password/";
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log("✅ Fetch status:", res.status);
+
+      let data;
+      
+      try {
+        data = await res.json();
+        console.log("📦 Password verification response:", data);
+      } catch (err) {
+        console.error("❌ Failed to parse JSON:", err);
+        return false;
+      }
+
+      if (!res.ok || !data.data.isValid) {
+        throw new Error("Invalid password");
+      }
+
+
+      return data.data.isValid;
+    } catch (err) {
+      console.error("🌐 Network error:", err);
+      return false;
     }
   },
 

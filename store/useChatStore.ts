@@ -234,7 +234,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ chatId, sender, receiver, text, mediaUrls }),
                 });
-
+                console.log("API response data: ", response);
                 if (!response.ok) throw new Error("Failed to send message");
 
                 const resData = await response.json();

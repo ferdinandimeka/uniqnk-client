@@ -6,6 +6,7 @@ import sendSound from "@/assets/sounds/send.wav";
 import AppStyles from "@/common/theming/styles";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
+import { useUserStore } from "@/store/useUserStore";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Audio } from "expo-av";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -39,6 +40,7 @@ const Chat = () => {
   const [text, setText] = useState("");
   const [isMediaOpen, setIsMediaOpen] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [sender, setSender] = useState<any>(null);
   const openModal = useOpenModal();
 
   const navigation = useRouter();
@@ -55,15 +57,30 @@ const Chat = () => {
     messages: storeMessages,
     fetchMessages,
     sendMessage,
+    createChat,
     loading,
   } = useChatStore();
   const { users } = useAuthStore();
+  const { getUserById } = useUserStore();
+
+  useEffect(() => {
+    if (!senderId) return;
+
+    const fetchUser = async () => {
+      const data = await getUserById(senderId as string);
+      setSender(data);
+      console.log("Fetched sender data:", data);
+    };
+
+    fetchUser();
+  }, [senderId]);
+
     
   const { connectSocket, disconnectSocket, socket, setTyping, selectedChatId } = useChatStore();
   // const currentUserId = useAuthStore.getState().users?.data.user._id;
   const currentUserId = users?.data.user._id;
-  const username = users?.data.user.username;
-  const profilePicture = users?.data.user.profilePicture;
+  const username = sender?.username ?? "Unknown User"
+  const profilePicture = sender?.profilePicture || "";
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -99,11 +116,29 @@ const Chat = () => {
 
   const sendMessages = async (msgText?: string) => {
     const finalText = (msgText ?? text).trim();
-    if (!finalText) return;
+    if (!finalText  || !currentUserId || !senderId) return;
 
     try {
+      let activeChatId = chatId as string | undefined;
+      console.log("activeChatId before creation: ", activeChatId);
+
+      if (!activeChatId) {
+        const newChat = await createChat([currentUserId, senderId as string]);
+        console.log("New chat created:", newChat);
+      
+        if (!newChat) {
+          console.error("Failed to create chat");
+          return;
+        }
+
+        activeChatId = newChat.data.id;
+
+        // Update route so future messages use existing chat
+        // router.setParams({ chatId: activeChatId });
+      }
+      console.log("activeChatId before sending message: ", activeChatId);
       await sendMessage(
-        chatId as string,
+        activeChatId as string,
         currentUserId as string, // ✅ sender
         senderId as string,      // ✅ receiver
         finalText,

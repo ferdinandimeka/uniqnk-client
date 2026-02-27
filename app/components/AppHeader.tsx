@@ -1,16 +1,19 @@
+import { useOpenModal } from "@/app/components/ModalContext";
 import { ON_BG } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
 import { useNavigation, useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import {
-    ArrowLeft,
-    Notification,
-    SearchNormal,
-    Setting5,
-    Sms
+  ArrowLeft,
+  Notification,
+  SearchNormal,
+  Setting5,
+  Sms
 } from "iconsax-react-native";
 import { ReactNode } from "react";
 import { TouchableOpacity, View } from "react-native";
 import AppText from "./AppText";
+import NotificationModal from "./NotificationModal";
 
 type Action = "search" | "settings" | "notifications" | "messages";
 export default function AppHeader({
@@ -27,6 +30,8 @@ export default function AppHeader({
   onBackPressed?: () => void;
 }) {
   const navigation = useNavigation();
+  const router = useRouter();
+  const openModal = useOpenModal();
 
   const theme = useTheme();
   return (
@@ -80,6 +85,7 @@ export default function AppHeader({
       ) : null}
       {actions.includes("messages") ? (
         <TouchableOpacity
+          onPress={() => router.push("/messages")}
           style={[
             AppStyles.iconButton,
             actions[actions.length - 1] === "messages"
@@ -92,6 +98,7 @@ export default function AppHeader({
       ) : null}
       {actions.includes("notifications") ? (
         <TouchableOpacity
+          onPress={() => openModal(NotificationModal, {})}
           style={[
             AppStyles.iconButton,
             actions[actions.length - 1] === "notifications"
