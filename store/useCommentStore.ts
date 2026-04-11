@@ -24,7 +24,7 @@ interface CommentState {
   error: string | null;
 
     // You can add methods for fetching, adding, updating, and deleting comments here
-    replyToPost: (postId: string, commentId: string) => Promise<void>;
+    replyToComment: (userId: string, postId: string, commentId: string, content: string) => Promise<void>;
     getCommentById: (id: string) => Promise<Comment | null>;
     likeAComment: (commentId: string, userId: string) => Promise<void>;
     unlikeAComment: (commentId: string, userId: string) => Promise<void>;
@@ -37,18 +37,19 @@ const useCommentStore = create<CommentState>((set) => ({
   isLoading: false,
   error: null,
 
-    replyToPost: async (postId, commentId) => {
+    replyToComment: async (userId, postId, commentId, content) => {
       set({ isLoading: true });
       try {
-        const response = await fetch(`${API_URL}/reply`, {
+        const response = await fetch(`${API_URL}/${commentId}/reply`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ postId, commentId }),
+          body: JSON.stringify({ userId, postId, content }),
         });
         if (!response.ok) throw new Error("Failed to reply to comment");
         const data = await response.json();
+        console.log("Reply to comment response data:", data);
         set((state) => ({
           comments: [...state.comments, data],
           isLoading: false,

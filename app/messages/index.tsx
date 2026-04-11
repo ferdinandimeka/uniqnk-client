@@ -1,3 +1,4 @@
+import AppText from "@/app/components/AppText";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import { useUserStore } from "@/store/useUserStore";
@@ -167,7 +168,8 @@ const Messages = () => {
             </View>
         </ScrollView> */}
         <ScrollView>
-            <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+            { jsonChats.length > 0 ? (
+                <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
                 {(jsonChats as Chat[]).map((chat: Chat) => {
                     const otherParticipantId =
                         chat.participants?.find((id: string) => id !== userId) || "";
@@ -202,7 +204,13 @@ const Messages = () => {
                         />
                     );
                 })}
-            </View>
+            </View>) : (
+                <View style={{ position: "relative", alignItems: "center" }}>
+                    <View style={{ position: "absolute", justifyContent: "center", alignItems: "center", top: 250 }}>
+                        <AppText variant="headerXlDark">No messages yet</AppText>
+                    </View>
+                </View>
+            )}
         </ScrollView>
 
     </AppScreen>

@@ -1,4 +1,5 @@
 import { ModalProvider } from "@/app/components/ModalProvider";
+import { useNotificationSocket } from "@/NotificationProvider";
 import { useAuthStore } from "@/store/useAuthStore"; // ✅ Zustand store
 import { useChatStore } from "@/store/useChatStore"; // ✅ Zustand store
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -81,6 +82,7 @@ const RootLayout = () => {
 const MainLayout = ({ isFirstTime }: { isFirstTime: boolean }) => {
   const { users } = useAuthStore(); // ✅ Zustand instead of Redux
   const userId = users?.data.user._id;
+  useNotificationSocket(userId);
 
   useEffect(() => {
     useChatStore.getState().connectSocket(userId);

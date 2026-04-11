@@ -42,10 +42,10 @@ interface PostState {
 
   getRankedPosts: (userId: string) => Promise<void>;
   getAllPosts: () => Promise<void>;
-  getPostById: (id: string) => Promise<Post | null>;
+  getPostById: (postId: string) => Promise<Post | null>;
   createPost: (post: Partial<Post>) => Promise<Post | null>;
-  updatePost: (id: string, post: Partial<Post>) => Promise<Post | null>;
-  deletePost: (id: string) => Promise<void>;
+  updatePost: (postId: string, post: Partial<Post>) => Promise<Post | null>;
+  deletePost: (postId: string) => Promise<void>;
 
   likePost: (postId: string, userId: string) => Promise<void>;
   unlikePost: (postId: string, userId: string) => Promise<void>;
@@ -88,9 +88,9 @@ export const usePostStore = create<PostState>((set, get) => ({
         }
     },
 
-    getPostById: async (id) => {
+    getPostById: async (postId) => {
         try {
-        const res = await fetch(`${API_URL}/${id}`);
+        const res = await fetch(`${API_URL}/${postId}`);
         const data = await res.json();
         // console.log("Fetched post by id:", data);
         return data.data;
@@ -115,16 +115,16 @@ export const usePostStore = create<PostState>((set, get) => ({
         }
     },
 
-    updatePost: async (id, post) => {
+    updatePost: async (postId, post) => {
         try {
-        const res = await fetch(`${API_URL}/${id}`, {
+        const res = await fetch(`${API_URL}/${postId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(post),
         });
         const data = await res.json();
         set({
-            posts: get().posts.map((p) => (p._id === id ? data.data : p)),
+            posts: get().posts.map((p) => (p._id === postId ? data.data : p)),
         });
         return data.data;
         } catch {
@@ -132,16 +132,16 @@ export const usePostStore = create<PostState>((set, get) => ({
         }
     },
 
-    deletePost: async (id) => {
+    deletePost: async (postId) => {
         try {
-        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        set({ posts: get().posts.filter((p) => p._id !== id) });
+        await fetch(`${API_URL}/${postId}`, { method: "DELETE" });
+        set({ posts: get().posts.filter((p) => p._id !== postId) });
         } catch {}
     },
 
     likePost: async (postId, userId) => {
         try {
-            const response = await fetch(`${API_URL}/${postId}/like`, {
+            const response = await fetch(`${API_URL}/${postId}/like-post`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId }),

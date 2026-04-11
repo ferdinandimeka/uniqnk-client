@@ -134,14 +134,18 @@ import moment from "moment";
 import { useAuthStore } from "@/store/useAuthStore";
 import useCommentStore, { Comment } from "@/store/useCommentStore";
 
+
+
 export default function CommentsView({
   commentId,
   setExpanded,
   expanded,
+  onReply
 }: {
   commentId: string;
   setExpanded: (open: boolean) => void;
   expanded: boolean;
+  onReply: (data: { commentId: string; username: string }) => void;
 }) {
   const { getCommentById, likeAComment, unlikeAComment } = useCommentStore();
   const { users } = useAuthStore();
@@ -216,7 +220,12 @@ export default function CommentsView({
           <AppText variant="body2Dark" style={TextStyles.xs}>
             {comment.content}
           </AppText>
-          <Text style={styles.reply}>Reply</Text>
+          <Text style={styles.reply} onPress={() => 
+            onReply({
+              commentId: comment._id,
+              username: comment.user.username
+            })
+          }>Reply</Text>
           {numComments ? (
             <AppButton
               onPress={() => setExpanded(!expanded)}

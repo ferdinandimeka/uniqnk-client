@@ -9,6 +9,7 @@ import {
 import AppStyles from "@/common/theming/styles";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePostStore } from "@/store/usePostStore";
+import { useUserStore } from "@/store/useUserStore";
 // import useFlatListAPI from "@/common/utils/use_flatlist_api";
 // import { useUserProfile } from "@/redux/auth/authActions";
 // import { AuthState } from "@/redux/auth/authSlice";
@@ -18,7 +19,7 @@ import { usePostStore } from "@/store/usePostStore";
 // } from "@/redux/posts/postsActions";
 // import { TabsParamList } from "@/navigation/TabsRouter";
 import AppText from "@/app/components/AppText";
-import React from "react";
+import React, { useEffect } from "react";
 import { Dimensions, Image, Pressable, TouchableOpacity, View } from "react-native";
 // import { AppScreenProps } from "../../../navigation/RootRouter";
 import Section from "@/app/components/Section";
@@ -26,6 +27,7 @@ import Section from "@/app/components/Section";
 import FollowersModal from "@/app/components/FollowersModal";
 import { useOpenModal } from "@/app/components/ModalContext";
 import NotificationModal from "@/app/components/NotificationModal";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import { Video } from "expo-av";
 import { Stack, useRouter } from "expo-router";
 import { HambergerMenu, Notification } from "iconsax-react-native";
@@ -33,14 +35,15 @@ import { HambergerMenu, Notification } from "iconsax-react-native";
 const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(_, ref) {
     const { users } = useAuthStore(); // ✅ get user from Zustand store
     const { posts } = usePostStore()
+    const { user, getUserById } = useUserStore();
     // console.log("posts: ", posts)
-    // console.log("users: ", users)
+    // console.log("user: ", user)
 
     // find total number of posts by user
     const picture = users?.data?.user.profilePicture;
     const userId = users?.data?.user._id
-    console.log("userId: ", userId)
-    const user = users?.data?.user;
+    // const userFromAuth = users?.data?.user;
+    // console.log("userFromAuth: ", userFromAuth)
     const numOfPosts = posts.filter(post => post.user._id === userId).length
 
     //get number of followers
@@ -49,7 +52,13 @@ const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(
     const numOfFollowing = user?.following?.length ?? 0
     const router = useRouter();
     const openModal = useOpenModal();
-    
+
+     useEffect(() => {
+      // if (userId) {
+        getUserById(userId); // ✅ fetch user data on mount
+      // }
+    }, [])
+
     const EditHandler = () => {
       // openModal(ProfileModal, {}) // 🎁 open edit profile
       router.push("/profile/editProfile")
@@ -128,12 +137,18 @@ const ProfileScreenHeader = React.forwardRef<View>(function ProfileScreenHeader(
 export default function ProfileScreen() {
   const {users} = useAuthStore();
   const { posts } = usePostStore()
+  const { getUserNotifications, notifications } = useNotificationStore();
+  const unreadCount = notifications.filter((n) => !n.isRead).length
   const user = users?.data?.user;
   const userId = users?.data?.user?._id;
   // const articles = useFlatListAPI(fetchExploreArticles, useExploreArticles);
   const router = useRouter();
   const openModal = useOpenModal();
-  // const padding = useAppPadding();
+  
+  useEffect(() => {
+      if (!userId) return
+      getUserNotifications(userId)
+  }, [userId])
 
   const userPosts = posts.filter(post => post.user._id === userId);
 
@@ -165,7 +180,7 @@ export default function ProfileScreen() {
                 onPress={() => openModal(NotificationModal, {})}
               >
                 <Notification size={18} color="#8F94AA" />
-                <AppText variant="body1Bold">0</AppText>
+                <AppText variant="body1Bold">{unreadCount}</AppText>
               </Pressable>
 
               <TouchableOpacity onPress={() => router.push('/settings')}>

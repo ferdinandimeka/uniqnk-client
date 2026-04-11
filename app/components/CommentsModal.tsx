@@ -203,9 +203,11 @@
 
 import { LIGHT_GREY } from "@/common/theming/colors";
 import AppStyles from "@/common/theming/styles";
+import { useAuthStore } from "@/store/useAuthStore";
+import useCommentStore from "@/store/useCommentStore";
 import { usePostStore } from "@/store/usePostStore";
 import { CloseCircle, Smileys } from "iconsax-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -222,7 +224,7 @@ import IconButton2 from "./IconButton2";
 import Loader from "./Loader";
 import { ModalArgs } from "./ModalContext";
 
-function useTreeList<T extends { id: string | number; replies?: T[] }>(
+function useTreeList<T extends { _id: string | number; replies?: T[] }>(
   items: T[] | null,
   getChildren: (item: T) => T[] | undefined
 ) {
@@ -230,7 +232,7 @@ function useTreeList<T extends { id: string | number; replies?: T[] }>(
 
   const flatten = (items: T[], depth = 0): { element: T; depth: number; expanded: boolean }[] => {
     return items?.flatMap((e) => {
-      const isExpanded = !!expanded[e.id];
+      const isExpanded = !!expanded[e._id];
       const children = isExpanded ? getChildren(e) ?? [] : [];
       return [
         { depth, element: e, expanded: isExpanded },
@@ -242,7 +244,7 @@ function useTreeList<T extends { id: string | number; replies?: T[] }>(
   const toggleExpanded = (item: T, open?: boolean) => {
     setExpandedState((prev) => ({
       ...prev,
-      [item.id]: open ?? !prev[item.id],
+      [item._id]: open ?? !prev[item._id],
     }));
   };
 
@@ -258,10 +260,18 @@ export default function CommentsModal({
 } & ModalArgs) {
   const bounce = useAnimatedValue(0);
   const { getPostById, commentToPost } = usePostStore();
+  const { replyToComment } = useCommentStore();
+  const { users } = useAuthStore();
+  const userId = users?.data?.user._id || "";
+  const formRef = useRef<any>(null);
 
   const [postComments, setPostComments] = useState<any[]>([]);
-  const [UserId, setUserId] = useState<string | null>(null);
+  // const [UserId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [replyTo, setReplyTo] = useState<{
+    commentId: string;
+    username: string;
+  } | null>(null);
 
   useEffect(() => {
     bounce.setValue(0);
@@ -278,9 +288,10 @@ export default function CommentsModal({
       setIsLoading(true); // Start loading
       try{
         const post = await getPostById(id);
+        
         if (post && Array.isArray(post.comments)) {
           setPostComments(post.comments);
-          setUserId(post.user);
+          // setUserId(post.user);
         } else {
           setPostComments([]);
         }
@@ -300,7 +311,7 @@ export default function CommentsModal({
   const hasNoComments = !postComments || postComments.length === 0;
 
   return (
-    <BottomSheetDialog {...props} dragToClose scrollable={false}>
+    <BottomSheetDialog id={undefined} {...props} dragToClose scrollable={false}>
       <View
         style={[
           AppStyles.row,
@@ -341,6 +352,7 @@ export default function CommentsModal({
                   // comment={element}
                   expanded={expanded}
                   setExpanded={(open) => setExpanded(element, open)}
+                  onReply={setReplyTo}
                 />
               )}
             </View>
@@ -349,15 +361,44 @@ export default function CommentsModal({
         />
       )}
 
+      {replyTo && (
+        <View style={styles.replyBanner}>
+          <Text style={styles.replyText}>
+            Replying to @{replyTo.username}
+          </Text>
+          <Text
+            style={styles.cancelReply}
+            onPress={() => setReplyTo(null)}
+          >
+            Cancel
+          </Text>
+        </View>
+      )}
+
       {/* Add a comment */}
       <Form
+        formRef={formRef}
         onSubmit={async (values) => {
           const text = values.comment?.trim();
           if (!text) return;
 
-          await commentToPost(id, UserId ?? "", text);
+          if (replyTo) {
+            // console.log("Replying to commentId:", replyTo.commentId, "with text:", text);
+            await replyToComment(userId, id, replyTo.commentId, text);
+          } else {
+            await commentToPost(id, userId ?? "", text);
+          }
+
           const updated = await getPostById(id);
           setPostComments(updated?.comments ?? []);
+
+          if (replyTo) {
+            setExpanded({ _id: replyTo.commentId } as any, true);
+          }
+
+          setReplyTo(null);
+          // clear input
+          formRef.current?.reset({ comment: "" })
         }}
       >
         <View
@@ -370,7 +411,11 @@ export default function CommentsModal({
             containerStyle={{ flex: 1 }}
             outlined
             noMargin
-            placeholder="Write a comment"
+            placeholder={
+              replyTo
+                ? `Reply to @${replyTo.username}`
+                : "Write a comment"
+            }
           />
           <FormSubmit
             variant="full"
@@ -408,6 +453,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#777",
     fontFamily: "Mulish",
+  },
+  replyBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  replyText: {
+    fontSize: 12,
+    color: "#6B6F80",
+    fontWeight: "600",
+  },
+  cancelReply: {
+    fontSize: 12,
+    color: "#384CFF",
+    fontWeight: "700",
   },
 });
 
